@@ -8,8 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		03FC29A292ACC40490383A1F /* Pods_Plugin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B2A61DA5A1F2DD4F959604D /* Pods_Plugin.framework */; };
+		174F24F126C68E7D00B8B3B7 /* Advertiser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 174F24F026C68E7D00B8B3B7 /* Advertiser.swift */; };
+		174F24F326C69CB800B8B3B7 /* Browser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 174F24F226C69CB800B8B3B7 /* Browser.swift */; };
 		20C0B05DCFC8E3958A738AF2 /* Pods_PluginTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6753A823D3815DB436415E3 /* Pods_PluginTests.framework */; };
-		2F98D68224C9AAE500613A4C /* P2pConnect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F98D68124C9AAE400613A4C /* P2pConnect.swift */; };
 		50ADFF92201F53D600D50D53 /* Plugin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 50ADFF88201F53D600D50D53 /* Plugin.framework */; };
 		50ADFF97201F53D600D50D53 /* P2pConnectPluginTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50ADFF96201F53D600D50D53 /* P2pConnectPluginTests.swift */; };
 		50ADFF99201F53D600D50D53 /* P2pConnectPlugin.h in Headers */ = {isa = PBXBuildFile; fileRef = 50ADFF8B201F53D600D50D53 /* P2pConnectPlugin.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -29,7 +30,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		2F98D68124C9AAE400613A4C /* P2pConnect.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = P2pConnect.swift; sourceTree = "<group>"; };
+		174F24F026C68E7D00B8B3B7 /* Advertiser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Advertiser.swift; sourceTree = "<group>"; };
+		174F24F226C69CB800B8B3B7 /* Browser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Browser.swift; sourceTree = "<group>"; };
 		3B2A61DA5A1F2DD4F959604D /* Pods_Plugin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Plugin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		50ADFF88201F53D600D50D53 /* Plugin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Plugin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		50ADFF8B201F53D600D50D53 /* P2pConnectPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = P2pConnectPlugin.h; sourceTree = "<group>"; };
@@ -93,10 +95,11 @@
 			isa = PBXGroup;
 			children = (
 				50E1A94720377CB70090CE1A /* P2pConnectPlugin.swift */,
-				2F98D68124C9AAE400613A4C /* P2pConnect.swift */,
 				50ADFF8B201F53D600D50D53 /* P2pConnectPlugin.h */,
 				50ADFFA72020EE4F00D50D53 /* P2pConnectPlugin.m */,
 				50ADFF8C201F53D600D50D53 /* Info.plist */,
+				174F24F026C68E7D00B8B3B7 /* Advertiser.swift */,
+				174F24F226C69CB800B8B3B7 /* Browser.swift */,
 			);
 			path = Plugin;
 			sourceTree = "<group>";
@@ -306,9 +309,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				174F24F326C69CB800B8B3B7 /* Browser.swift in Sources */,
 				50E1A94820377CB70090CE1A /* P2pConnectPlugin.swift in Sources */,
-				2F98D68224C9AAE500613A4C /* P2pConnect.swift in Sources */,
 				50ADFFA82020EE4F00D50D53 /* P2pConnectPlugin.m in Sources */,
+				174F24F126C68E7D00B8B3B7 /* Advertiser.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
