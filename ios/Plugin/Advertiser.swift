@@ -54,7 +54,7 @@ extension Advertiser: MCNearbyServiceAdvertiserDelegate {
         
         invitationHandler(true, session)
         
-        serviceAdvertiser.stopAdvertisingPeer()
+        //serviceAdvertiser.stopAdvertisingPeer()
         
         delegate?.advertiserConnected(advertiserId: self.id, session: session!)
     }
