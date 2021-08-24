@@ -1,5 +1,6 @@
 import Foundation
 import MultipeerConnectivity
+import Capacitor
 
 protocol AdvertiserDelegate: AnyObject {
 

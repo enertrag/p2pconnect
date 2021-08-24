@@ -67,6 +67,7 @@ class Browser: NSObject {
 extension Browser: MCNearbyServiceBrowserDelegate {
     
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
+        CAPLog.print("FoundPeer \(peerID)")
         
         if ignoreLocalDevice, let info = info?["instance"] {
             

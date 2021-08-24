@@ -34,6 +34,7 @@ public class P2pConnectPlugin: CAPPlugin {
     
     @objc func isAvailable(_ call: CAPPluginCall) {
      
+        CAPLog.print("isAvailable called")
         call.resolve(["available": true])
     }
     
@@ -84,7 +85,7 @@ public class P2pConnectPlugin: CAPPlugin {
     }
     
     @objc func startBrowse(_ call: CAPPluginCall) {
-        
+        CAPLog.print("startBrowse called")
         let displayName = call.getString("displayName")
         
         guard let serviceType = call.getString("serviceType") else {
@@ -93,7 +94,9 @@ public class P2pConnectPlugin: CAPPlugin {
         }
         
         let ignoreLocalDevice = call.getBool("ignoreLocalDevice") ?? true
-        
+        if (ignoreLocalDevice){
+            CAPLog.print("ignore local device")
+        }
         let browser = Browser(displayName: displayName, serviceType: serviceType, ignoreLocalDevice: ignoreLocalDevice)
         browser.delegate = self
 
@@ -158,7 +161,7 @@ public class P2pConnectPlugin: CAPPlugin {
 
         if !browser.connect(peerId: key) {
             
-            call.reject("Must provide a peer")
+            call.reject("Cannot connect to peer")
             return
         }
         
@@ -186,6 +189,8 @@ public class P2pConnectPlugin: CAPPlugin {
     }
     
     @objc func send(_ call: CAPPluginCall) {
+        
+        CAPLog.print("send called")
         
         guard let sessionObj = call.getObject("session"),
               let key = sessionObj["id"] as? String,
@@ -234,6 +239,8 @@ extension P2pConnectPlugin: BrowserDelegate {
     
     func peerStateChanged(key: String, displayName: String, found: Bool) {
         
+        CAPLog.print("peerStateChanged \(key) \(displayName) \(found)")
+        
         notifyListeners(found ? "peerFound" : "peerLost", data: ["id": key, "displayName": displayName])
     }
     
@@ -243,6 +250,8 @@ extension P2pConnectPlugin: AdvertiserDelegate {
     
     func advertiserConnected(advertiserId: String, session: MCSession) {
     
+        CAPLog.print("advertiserConnected \(advertiserId)")
+        
         let sessionId = addOrGetSession(session: session)
         
         notifyListeners("connect", data: ["advertiser": ["id": advertiserId], "session": ["id": sessionId]])
@@ -280,6 +289,7 @@ extension P2pConnectPlugin: MCSessionDelegate {
     
     public func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
 
+        CAPLog.print("didReceive from peer")
         if let item = sessions.first(where: {$0.value === session}) {
             
             
