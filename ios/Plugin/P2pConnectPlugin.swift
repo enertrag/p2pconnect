@@ -6,7 +6,6 @@ import MultipeerConnectivity
 
 var InstanceId = UUID().uuidString
 
-
 class Log {
     
     static let Info = "🐭  "
@@ -33,7 +32,7 @@ public class P2pConnectPlugin: CAPPlugin {
     }
     
     @objc func isAvailable(_ call: CAPPluginCall) {
-     
+        
         CAPLog.print("isAvailable called")
         call.resolve(["available": true])
     }
@@ -59,7 +58,6 @@ public class P2pConnectPlugin: CAPPlugin {
     }
     
     @objc func stopAdvertise(_ call: CAPPluginCall) {
-        
         CAPLog.print("stopAdvertise called")
         
         guard let advertiserObj = call.getObject("advertiser") else {
@@ -263,35 +261,34 @@ extension P2pConnectPlugin: MCSessionDelegate {
     
     public func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
         
-        let s = sessions.first(where: {$0.value === session})!
+        // let s = sessions.first(where: {$0.value === session})!
         
-        var jsState: String
-        switch state {
-        case .notConnected:
-            jsState = "notConnected"
-        case .connecting:
-            jsState = "connecting"
-        case .connected:
-            jsState = "connected"
-        @unknown default:
-            CAPLog.print(Log.Fatal, self.pluginId, "-", "unknown MCSessionState")
-            jsState = "unknown"
-        }
+        // var jsState: String
+        // switch state {
+        // case .notConnected:
+        //     jsState = "notConnected"
+        // case .connecting:
+        //    jsState = "connecting"
+        //case .connected:
+        //    jsState = "connected"
+        //@unknown default:
+        //    CAPLog.print(Log.Fatal, self.pluginId, "-", "unknown MCSessionState")
+        //    jsState = "unknown"
+        //}
         
-        notifyListeners("sessionStateChange", data: [
-            "session": ["id": s.key],
-            "state": jsState
-        ])
+        //notifyListeners("sessionStateChange", data: [
+        //    "session": ["id": s.key],
+        //    "state": jsState
+        //])
         
         
-        CAPLog.print("\(s.key) -> didChangeState \(state.rawValue)")
+        //CAPLog.print("\(s.key) -> didChangeState \(state.rawValue)")
     }
     
     public func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
 
         CAPLog.print("didReceive from peer")
         if let item = sessions.first(where: {$0.value === session}) {
-            
             
             let message = String(decoding: data, as: UTF8.self)
             
