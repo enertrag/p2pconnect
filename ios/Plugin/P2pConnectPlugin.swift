@@ -25,6 +25,8 @@ public class P2pConnectPlugin: CAPPlugin {
     
     private var sessions: [String:MCSession] = [:]
     
+    private var progress: [String:Progress] = [:]
+    
     override public func load() {
     }
 
@@ -240,7 +242,7 @@ public class P2pConnectPlugin: CAPPlugin {
         }
         
         guard let peerObj = call.getObject("peer"),
-            let key = peerObj["id"] as? String else {
+            let key = peerObj["displayName"] as? String else {
             
             call.reject("Must provide a peer")
             return
@@ -251,13 +253,14 @@ public class P2pConnectPlugin: CAPPlugin {
             return
         }
         
-        for p in session.connectedPeers {
-        
-            let pr = session.sendResource(at: urlToSend, withName: name, toPeer: p, withCompletionHandler: nil)
-            
-            pr
-            
+        guard let peerId = session.connectedPeers.first(where: {$0.displayName == key}) else{
+            call.reject("Peer not connected")
+            return
         }
+            
+        let progressRequest = session.sendResource(at: urlToSend, withName: name, toPeer: peerId, withCompletionHandler: nil)
+        
+        progress[key] = progressRequest
         
         call.resolve()
     }
@@ -307,28 +310,30 @@ extension P2pConnectPlugin: MCSessionDelegate {
     
     public func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
         
-        // let s = sessions.first(where: {$0.value === session})!
+        guard let s = sessions.first(where: {$0.value === session}) else {
+            return
+        }
+           
+        var jsState: String
+        switch state {
+        case .notConnected:
+            jsState = "notConnected"
+        case .connecting:
+           jsState = "connecting"
+       case .connected:
+           jsState = "connected"
+       @unknown default:
+           CAPLog.print(Log.Fatal, self.pluginId, "-", "unknown MCSessionState")
+           jsState = "unknown"
+       }
+       
+       notifyListeners("sessionStateChange", data: [
+           "session": ["id": s.key],
+           "state": jsState
+       ])
+       
+       CAPLog.print("\(s.key) -> didChangeState \(state.rawValue)")
         
-        // var jsState: String
-        // switch state {
-        // case .notConnected:
-        //     jsState = "notConnected"
-        // case .connecting:
-        //    jsState = "connecting"
-        //case .connected:
-        //    jsState = "connected"
-        //@unknown default:
-        //    CAPLog.print(Log.Fatal, self.pluginId, "-", "unknown MCSessionState")
-        //    jsState = "unknown"
-        //}
-        
-        //notifyListeners("sessionStateChange", data: [
-        //    "session": ["id": s.key],
-        //    "state": jsState
-        //])
-        
-        
-        //CAPLog.print("\(s.key) -> didChangeState \(state.rawValue)")
     }
     
     public func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
@@ -344,6 +349,7 @@ extension P2pConnectPlugin: MCSessionDelegate {
             ])
         }
     }
+    
     
     public func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
         
