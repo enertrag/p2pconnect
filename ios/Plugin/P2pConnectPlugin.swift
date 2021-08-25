@@ -214,7 +214,53 @@ public class P2pConnectPlugin: CAPPlugin {
         
         call.resolve()
     }
-    
+ 
+    @objc func sendResource(_ call: CAPPluginCall) {
+        
+        CAPLog.print("send binary called")
+        
+        guard let sessionObj = call.getObject("session"),
+              let key = sessionObj["id"] as? String,
+              let session = sessions[key] else {
+            
+            call.reject("Must provide a valid session")
+            return
+        }
+        
+        guard let url = call.getString("url") else {
+            
+            call.reject("Must provide an url")
+            return
+        }
+        
+        guard let name = call.getString("name") else {
+            
+            call.reject("Must provide a name")
+            return
+        }
+        
+        guard let peerObj = call.getObject("peer"),
+            let key = peerObj["id"] as? String else {
+            
+            call.reject("Must provide a peer")
+            return
+        }
+        
+        guard let urlToSend = URL(string: url) else{
+            call.reject("Must provide a valid url")
+            return
+        }
+        
+        for p in session.connectedPeers {
+        
+            let pr = session.sendResource(at: urlToSend, withName: name, toPeer: p, withCompletionHandler: nil)
+            
+            pr
+            
+        }
+        
+        call.resolve()
+    }
  
     private func addOrGetSession(session: MCSession) -> String {
         

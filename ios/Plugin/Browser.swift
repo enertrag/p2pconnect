@@ -2,7 +2,6 @@ import Foundation
 import MultipeerConnectivity
 import Capacitor
 
-
 protocol BrowserDelegate: AnyObject {
     
     func peerStateChanged(key: String, displayName: String, found: Bool)

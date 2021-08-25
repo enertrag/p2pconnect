@@ -133,6 +133,11 @@ export interface P2pConnectPlugin {
   send(options: { session: Session, message: string }): Promise<void>;
 
   /**
+   * Sends an (file or HTTP) URL to all connected devices in a session.
+   */
+  sendResource(options: { session: Session, peer: Peer, url: string, name: string }): Promise<void>;
+
+  /**
    * Indicates that a new device has been found nearby.
    * 
    * @since 1.0.0

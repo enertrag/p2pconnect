@@ -21,6 +21,7 @@ npx cap sync
 * [`connect(...)`](#connect)
 * [`disconnect(...)`](#disconnect)
 * [`send(...)`](#send)
+* [`sendResource(...)`](#sendresource)
 * [`addListener(...)`](#addlistener)
 * [`addListener(...)`](#addlistener)
 * [`addListener(...)`](#addlistener)
@@ -167,6 +168,23 @@ Sends a message to all connected devices in a session.
 | Param         | Type                                                                       |
 | ------------- | -------------------------------------------------------------------------- |
 | **`options`** | <code>{ session: <a href="#session">Session</a>; message: string; }</code> |
+
+**Returns:** <code>any</code>
+
+--------------------
+
+
+### sendResource(...)
+
+```typescript
+sendResource(options: { session: Session; peer: Peer; url: string; name: string; }) => any
+```
+
+Sends an (file or HTTP) URL to all connected devices in a session.
+
+| Param         | Type                                                                                                                 |
+| ------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **`options`** | <code>{ session: <a href="#session">Session</a>; peer: <a href="#peer">Peer</a>; url: string; name: string; }</code> |
 
 **Returns:** <code>any</code>
 
