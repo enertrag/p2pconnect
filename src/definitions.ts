@@ -65,6 +65,23 @@ export interface ReceiveResult {
   session: Session
 
   message: String
+
+  url: String
+}
+
+export interface StartReceiveResult {
+
+  session: Session
+
+  name: String
+}
+
+export interface Progress {
+  
+  isFinished: boolean
+
+  fractionCompleted: number
+
 }
 
 /**
@@ -133,9 +150,15 @@ export interface P2pConnectPlugin {
   send(options: { session: Session, message: string }): Promise<void>;
 
   /**
-   * Sends an (file or HTTP) URL to all connected devices in a session.
+   * Sends an (file or HTTP) URL to all connected devices in a session. Returns the id of the progress.
    */
-  sendResource(options: { session: Session, peer: Peer, url: string, name: string }): Promise<void>;
+  sendResource(options: { session: Session, peer: Peer, url: string, name: string }): Promise<{id: string}>;
+
+  /**
+   * Get the current progress a send or receive action
+   * @param options 
+   */
+  getProgress(options: { id: string }): Promise<Progress>;
 
   /**
    * Indicates that a new device has been found nearby.
@@ -174,7 +197,15 @@ export interface P2pConnectPlugin {
   ): Promise<PluginListenerHandle> & PluginListenerHandle;
 
   /**
-   * Indicates that a message has been received.
+   * Indicates that receiving data has been started.
+   */
+   addListener(
+    eventName: 'startReceive',
+    listenerFunc: (result: StartReceiveResult) => void,
+  ): Promise<PluginListenerHandle> & PluginListenerHandle;
+
+  /**
+   * Indicates that a message or url has been received.
    */
   addListener(
     eventName: 'receive',

@@ -260,11 +260,30 @@ public class P2pConnectPlugin: CAPPlugin {
             
         let progressRequest = session.sendResource(at: urlToSend, withName: name, toPeer: peerId, withCompletionHandler: nil)
         
-        progress[key] = progressRequest
+        let uuid = UUID().uuidString
+        progress[uuid] = progressRequest
         
-        call.resolve()
+        call.resolve(["id": uuid])
     }
  
+    @objc func getProgress(_ call: CAPPluginCall) {
+        
+        CAPLog.print("getProgress called")
+        
+        guard let id = call.getString("id") else{
+            call.reject("Must provide an id for the progress")
+            return
+        }
+        
+        guard let p = progress[id] else {
+            
+            call.reject("Progress unkown")
+            return
+        }
+    
+        call.resolve(["isFinished": p.isFinished, "fractionCompleted": p.fractionCompleted])
+    }
+    
     private func addOrGetSession(session: MCSession) -> String {
         
         if let existingSession = sessions.first(where: {$0.value === session}) {
@@ -358,11 +377,29 @@ extension P2pConnectPlugin: MCSessionDelegate {
     
     public func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
         
+        if let item = sessions.first(where: {$0.value === session}) {
+            
+            notifyListeners("startReceive", data: [
+                "session": ["id": item.key],
+                "name": resourceName
+            ])
+        }
+        
         CAPLog.print("didReceive withName & progress")
     }
     
     public func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {
         
+        if let item = sessions.first(where: {$0.value === session}) {
+            
+            let url = localURL?.absoluteString
+            
+            notifyListeners("receive", data: [
+                "session": ["id": item.key],
+                "url": url
+            ])
+        }
+       
         CAPLog.print("didFinishReceiving")
     }
     
