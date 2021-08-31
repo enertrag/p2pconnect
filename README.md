@@ -378,10 +378,11 @@ Remove all native listeners for this plugin.
 
 #### Progress
 
-| Prop             | Type                 |
-| ---------------- | -------------------- |
-| **`isFinished`** | <code>boolean</code> |
-| **`percentage`** | <code>number</code>  |
+| Prop                    | Type                 |
+| ----------------------- | -------------------- |
+| **`isFinished`**        | <code>boolean</code> |
+| **`isCancelled`**       | <code>boolean</code> |
+| **`fractionCompleted`** | <code>number</code>  |
 
 
 #### PluginListenerHandle
@@ -412,7 +413,7 @@ Remove all native listeners for this plugin.
 | Prop          | Type                                        |
 | ------------- | ------------------------------------------- |
 | **`session`** | <code><a href="#session">Session</a></code> |
-| **`name`**    | <code>any</code>                            |
+| **`name`**    | <code>string</code>                         |
 
 
 #### ReceiveResult
@@ -420,8 +421,8 @@ Remove all native listeners for this plugin.
 | Prop          | Type                                        |
 | ------------- | ------------------------------------------- |
 | **`session`** | <code><a href="#session">Session</a></code> |
-| **`message`** | <code>any</code>                            |
-| **`url`**     | <code>any</code>                            |
+| **`message`** | <code>string</code>                         |
+| **`url`**     | <code>string</code>                         |
 
 
 ### Enums

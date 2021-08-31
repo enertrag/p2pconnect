@@ -43,6 +43,7 @@ class Browser: NSObject {
     func stopBrowsingForPeers() {
         
         serviceBrowser.stopBrowsingForPeers()
+        detectedPeers.removeAll()
     }
     
     func connect(peerId: String) -> Bool {
@@ -87,7 +88,7 @@ extension Browser: MCNearbyServiceBrowserDelegate {
         
         if let item = detectedPeers.first(where: { $0.value == peerID }) {
 
-            detectedPeers[item.key] = nil
+            detectedPeers.removeValue(forKey: item.key)
             
             delegate?.peerStateChanged(key: item.key, displayName: item.value.displayName, found: false)
         }

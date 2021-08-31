@@ -64,21 +64,23 @@ export interface ReceiveResult {
 
   session: Session
 
-  message: String
+  message: string
 
-  url: String
+  url: string
 }
 
 export interface StartReceiveResult {
 
   session: Session
 
-  name: String
+  name: string
 }
 
 export interface Progress {
   
   isFinished: boolean
+
+  isCancelled: boolean
 
   fractionCompleted: number
 

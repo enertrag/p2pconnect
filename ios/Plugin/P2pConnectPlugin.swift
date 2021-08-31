@@ -135,7 +135,7 @@ public class P2pConnectPlugin: CAPPlugin {
         browser.stopBrowsingForPeers()
         
         // Connect(ing) to nearby devices does not work after this call:
-        serviceBrowsers[key] = nil
+        serviceBrowsers.removeValue(forKey: key)
         
         call.resolve()
     }
@@ -183,7 +183,7 @@ public class P2pConnectPlugin: CAPPlugin {
         }
         
         session.disconnect()
-        sessions[key] = nil
+        sessions.removeValue(forKey: key)
         
         call.resolve()
     }
@@ -281,7 +281,7 @@ public class P2pConnectPlugin: CAPPlugin {
             return
         }
     
-        call.resolve(["isFinished": p.isFinished, "fractionCompleted": p.fractionCompleted])
+        call.resolve(["isFinished": p.isFinished, "isCancelled": p.isCancelled, "fractionCompleted": p.fractionCompleted])
     }
     
     private func addOrGetSession(session: MCSession) -> String {
