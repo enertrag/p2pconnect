@@ -17,72 +17,72 @@ export interface Advertiser {
 
 export interface Browser {
 
-  id: string
+  id: string;
 }
 
 export interface Peer {
 
-  id: string
+  id: string;
 
-  displayName?: string
+  displayName?: string;
 
 }
 
 export interface BrowseOptions {
 
-  displayName?: string
+  displayName?: string;
 
-  serviceType: string
+  serviceType: string;
 
   /**
    * Sets whether to ignore advertisements from your own device.
    */
-  ignoreLocalDevice: boolean
+  ignoreLocalDevice: boolean;
 }
 
 export interface Session {
 
-  id: string
+  id: string;
 }
 
 export interface ConnectResult {
 
-  advertiser: Advertiser
+  advertiser: Advertiser;
 
-  session: Session
+  session: Session;
 
 }
 
 export interface SessionStateResult {
 
-  session: Session
+  session: Session;
 
-  state: SessionState
+  state: SessionState;
 }
 
 export interface ReceiveResult {
 
-  session: Session
+  session: Session;
 
-  message: string
+  message: string;
 
-  url: string
+  url: string;
 }
 
 export interface StartReceiveResult {
 
-  session: Session
+  session: Session;
 
-  name: string
+  name: string;
 }
 
 export interface Progress {
   
-  isFinished: boolean
+  isFinished: boolean;
 
-  isCancelled: boolean
+  isCancelled: boolean;
 
-  fractionCompleted: number
+  fractionCompleted: number;
 
 }
 
