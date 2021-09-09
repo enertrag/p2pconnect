@@ -5,15 +5,19 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.util.Log;
+
+import java.util.ArrayList;
 
 public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
 
     private WifiP2pManager manager;
     private WifiP2pManager.Channel channel;
     private P2pConnectPlugin activity;
+    private ArrayList<WifiP2pDevice> peers;
 
     WifiP2pManager.PeerListListener myPeerListListener;
 
@@ -30,20 +34,16 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
     }
 
     private void initPeerListener() {
-        WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
+        myPeerListListener = new WifiP2pManager.PeerListListener() {
             @Override
             public void onPeersAvailable(WifiP2pDeviceList peerList) {
 
-                // TODO gefundene peers an plugin notifizieren
-                /*
+                activity.notifyPeersLost(peers);
+
                 peers.clear();
                 peers.addAll(peerList.getDeviceList());
 
-                ((WiFiPeerListAdapter) getListAdapter()).notifyDataSetChanged();
-                if (peers.size() == 0) {
-                    Log.d(WiFiDirectActivity.TAG, "No devices found");
-                    return;
-                }*/
+                activity.notifyPeersFound(peerList.getDeviceList());
             }
         };
     }

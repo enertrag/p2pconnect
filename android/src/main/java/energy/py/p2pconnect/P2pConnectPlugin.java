@@ -1,6 +1,8 @@
 package energy.py.p2pconnect;
 
 import android.Manifest;
+import android.net.wifi.p2p.WifiP2pDevice;
+
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PermissionState;
 import com.getcapacitor.Plugin;
@@ -9,6 +11,9 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 @CapacitorPlugin(
         name = "P2pConnect",
@@ -40,9 +45,17 @@ public class P2pConnectPlugin extends Plugin {
 
     private P2pConnect implementation;
 
+    public static final String PEER_FOUND_EVENT = "peerFound";
+    public static final String PEER_LOST_EVENT = "peerLost";
+    public static final String CONNECT_EVENT = "connect";
+    public static final String SESSION_STATE_CHANGE_EVENT = "sessionStateChange";
+    public static final String START_RECEIVE_EVENT = "startReceive";
+    public static final String RECEIVE_EVENT = "receive";
+
     @Override
     public void load() {
         implementation = new P2pConnect(this);
+        implementation.start();
     }
 
     @PluginMethod
@@ -50,6 +63,8 @@ public class P2pConnectPlugin extends Plugin {
         JSObject ret = new JSObject();
         ret.put("available", implementation.isAvailable());
         call.resolve(ret);
+        notifyListeners("",null);
+        // bridge.triggerJSEvent("", "", "");
     }
 
     @PluginMethod
@@ -57,15 +72,16 @@ public class P2pConnectPlugin extends Plugin {
         if (!allPermissionsGranted()) {
             requestAllPermissions(call, "completeStartAdvertising");
         } else {
+            implementation.start();
             JSObject ret = new JSObject();
             call.resolve(ret);
         }
     }
 
     @PermissionCallback
-    private void completeRequestPermissions(PluginCall call) {
+    private void completeStartAdvertising(PluginCall call) {
         if (allPermissionsGranted()) {
-            implementation.discoverPeers();
+            implementation.start();
         } else {
             call.reject("Location permission was denied");
         }
@@ -73,7 +89,7 @@ public class P2pConnectPlugin extends Plugin {
 
     @PluginMethod
     public void stopAdvertise(PluginCall call) {
-
+        implementation.end();
         JSObject ret = new JSObject();
         call.resolve(ret);
     }
@@ -81,12 +97,48 @@ public class P2pConnectPlugin extends Plugin {
     @PluginMethod
     public void startBrowse(PluginCall call) {
 
-        JSObject ret = new JSObject();
-        call.resolve(ret);
+        if (!allPermissionsGranted()) {
+            requestAllPermissions(call, "completeStartBrowsing");
+        } else {
+            completeStartBrowsing(call);
+        }
+    }
+
+    @PermissionCallback
+    private void completeStartBrowsing(PluginCall call) {
+        if (allPermissionsGranted()) {
+            implementation.discoverPeers(new ActionListenerCallback() {
+                @Override
+                public void onSuccess() {
+                    JSObject ret = new JSObject();
+                    ret.put("id", "abc123");
+                    call.resolve(ret);
+                }
+
+                @Override
+                public void onFailure(int code) {
+                    call.reject("Error discovering peers. Code " + code);
+                }
+            });
+        } else {
+            call.reject("Location permission was denied");
+        }
     }
 
     @PluginMethod
     public void stopBrowse(PluginCall call) {
+        implementation.stopPeerDiscovery(new ActionListenerCallback() {
+            @Override
+            public void onSuccess() {
+                JSObject ret = new JSObject();
+                call.resolve(ret);
+            }
+
+            @Override
+            public void onFailure(int code) {
+                call.reject("Error stopping peer discovery. Code " + code);
+            }
+        });
 
         JSObject ret = new JSObject();
         call.resolve(ret);
@@ -95,12 +147,41 @@ public class P2pConnectPlugin extends Plugin {
     @PluginMethod
     public void connect(PluginCall call) {
 
+        JSObject peer = call.getObject("peer");
+        String deviceAddress = peer.getString("id");
+
+        implementation.connect(deviceAddress, new ActionListenerCallback() {
+            @Override
+            public void onSuccess() {
+                JSObject ret = new JSObject();
+                ret.put("id", "abc123");
+                call.resolve(ret);
+            }
+
+            @Override
+            public void onFailure(int code) {
+                call.reject("Error connecting to peer. Code " + code);
+            }
+        });
+
         JSObject ret = new JSObject();
         call.resolve(ret);
     }
 
     @PluginMethod
     public void disconnect(PluginCall call) {
+        implementation.disconnect(new ActionListenerCallback() {
+            @Override
+            public void onSuccess() {
+                JSObject ret = new JSObject();
+                call.resolve(ret);
+            }
+
+            @Override
+            public void onFailure(int code) {
+                call.reject("Error disconnecting. Code " + code);
+            }
+        });
 
         JSObject ret = new JSObject();
         call.resolve(ret);
@@ -135,4 +216,22 @@ public class P2pConnectPlugin extends Plugin {
     }
 
 
+    public void notifyPeersFound(Collection<WifiP2pDevice> deviceList) {
+        for (WifiP2pDevice device: deviceList) {
+            notifyListeners(PEER_FOUND_EVENT, createBrowserObjectFromDevice(device));
+        }
+    }
+
+    public void notifyPeersLost(ArrayList<WifiP2pDevice> peers) {
+        for (WifiP2pDevice device: peers) {
+            notifyListeners(PEER_LOST_EVENT, createBrowserObjectFromDevice(device));
+        }
+    }
+
+    private JSObject createBrowserObjectFromDevice(WifiP2pDevice device) {
+        JSObject ret = new JSObject();
+        ret.put("id", device.deviceAddress);
+        ret.put("displayName", device.deviceName);
+        return ret;
+    }
 }

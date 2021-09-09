@@ -1,11 +1,16 @@
 package energy.py.p2pconnect;
 
+import static android.content.ContentValues.TAG;
 import static android.os.Looper.getMainLooper;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.net.wifi.WifiManager;
+import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.util.Log;
 
 public class P2pConnect {
 
@@ -17,8 +22,14 @@ public class P2pConnect {
 
     public P2pConnect(P2pConnectPlugin p2pConnectPlugin) {
         plugin = p2pConnectPlugin;
-        manager = (WifiP2pManager) plugin.getContext().getSystemService(Context.WIFI_P2P_SERVICE);
-        channel = manager.initialize(plugin.getContext(), getMainLooper(), null);
+
+        if (!initP2p()) {
+            plugin.getActivity().finish();
+        }
+
+        // manager = (WifiP2pManager) plugin.getContext().getSystemService(Context.WIFI_P2P_SERVICE);
+        // channel = manager.initialize(plugin.getContext(), getMainLooper(), null);
+        
         receiver = new WiFiDirectBroadcastReceiver(manager, channel, plugin);
 
         intentFilter = new IntentFilter();
@@ -26,6 +37,40 @@ public class P2pConnect {
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+    }
+
+    private boolean initP2p() {
+        // Device capability definition check
+        if (!plugin.getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT)) {
+            Log.e(TAG, "Wi-Fi Direct is not supported by this device.");
+            return false;
+        }
+
+        // Hardware capability check
+        WifiManager wifiManager = (WifiManager) plugin.getContext().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        if (wifiManager == null) {
+            Log.e(TAG, "Cannot get Wi-Fi system service.");
+            return false;
+        }
+
+        if (!wifiManager.isP2pSupported()) {
+            Log.e(TAG, "Wi-Fi Direct is not supported by the hardware or Wi-Fi is off.");
+            return false;
+        }
+
+        manager = (WifiP2pManager) plugin.getContext().getSystemService(Context.WIFI_P2P_SERVICE);
+        if (manager == null) {
+            Log.e(TAG, "Cannot get Wi-Fi Direct system service.");
+            return false;
+        }
+
+        channel = manager.initialize(plugin.getContext(), getMainLooper(), null);
+        if (channel == null) {
+            Log.e(TAG, "Cannot initialize Wi-Fi Direct.");
+            return false;
+        }
+
+        return true;
     }
 
     public void start() {
@@ -37,16 +82,62 @@ public class P2pConnect {
     }
 
     @SuppressLint("MissingPermission")
-    public void discoverPeers() {
+    public void discoverPeers(ActionListenerCallback callback) {
         manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
-
+                callback.onSuccess();
             }
 
             @Override
             public void onFailure(int reasonCode) {
+                callback.onFailure(reasonCode);
+            }
+        });
+    }
 
+    public void stopPeerDiscovery(ActionListenerCallback callback) {
+        manager.stopPeerDiscovery(channel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                callback.onSuccess();
+            }
+
+            @Override
+            public void onFailure(int reasonCode) {
+                callback.onFailure(reasonCode);
+            }
+        });
+    }
+
+    @SuppressLint("MissingPermission")
+    public void connect(String deviceAddress, ActionListenerCallback connectCallback) {
+        WifiP2pConfig config = new WifiP2pConfig();
+        config.deviceAddress = deviceAddress;
+        manager.connect(channel, config, new WifiP2pManager.ActionListener() {
+
+            @Override
+            public void onSuccess() {
+                connectCallback.onSuccess();
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                connectCallback.onFailure(reason);
+            }
+        });
+    }
+
+    public void disconnect(ActionListenerCallback callback) {
+        manager.cancelConnect(channel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                callback.onSuccess();
+            }
+
+            @Override
+            public void onFailure(int reasonCode) {
+                callback.onFailure(reasonCode);
             }
         });
     }
@@ -54,4 +145,6 @@ public class P2pConnect {
     public boolean isAvailable() {
         return receiver.isAvailable();
     }
+
+
 }
