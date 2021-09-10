@@ -17,7 +17,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
     private WifiP2pManager manager;
     private WifiP2pManager.Channel channel;
     private P2pConnectPlugin activity;
-    private ArrayList<WifiP2pDevice> peers;
+    private ArrayList<WifiP2pDevice> peers = new ArrayList<>();
 
     WifiP2pManager.PeerListListener myPeerListListener;
 

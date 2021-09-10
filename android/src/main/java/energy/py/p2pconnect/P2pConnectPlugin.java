@@ -1,7 +1,10 @@
 package energy.py.p2pconnect;
 
+import static android.content.ContentValues.TAG;
+
 import android.Manifest;
 import android.net.wifi.p2p.WifiP2pDevice;
+import android.util.Log;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PermissionState;
@@ -54,6 +57,7 @@ public class P2pConnectPlugin extends Plugin {
 
     @Override
     public void load() {
+        Log.e(TAG, "load()");
         implementation = new P2pConnect(this);
         implementation.start();
     }
@@ -217,12 +221,16 @@ public class P2pConnectPlugin extends Plugin {
 
 
     public void notifyPeersFound(Collection<WifiP2pDevice> deviceList) {
+        if (deviceList == null) return;
+
         for (WifiP2pDevice device: deviceList) {
             notifyListeners(PEER_FOUND_EVENT, createBrowserObjectFromDevice(device));
         }
     }
 
     public void notifyPeersLost(ArrayList<WifiP2pDevice> peers) {
+        if (peers == null) return;
+
         for (WifiP2pDevice device: peers) {
             notifyListeners(PEER_LOST_EVENT, createBrowserObjectFromDevice(device));
         }
