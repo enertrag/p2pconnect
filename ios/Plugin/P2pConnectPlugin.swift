@@ -167,7 +167,24 @@ public class P2pConnectPlugin: CAPPlugin {
         
         let id = addOrGetSession(session: browser.session!)
         
+        CAPLog.print("Connect new SessionID: \(id)")
+        
         call.resolve(["id": id])
+    }
+    
+    private func addOrGetSession(session: MCSession) -> String {
+        
+        if let existingSession = sessions.first(where: {$0.value === session}) {
+            CAPLog.print("addOrGetSession:> existingSession:\(existingSession.key)")
+            return existingSession.key
+        }
+        
+        let uuid = UUID().uuidString
+        sessions[uuid] = session
+        
+        session.delegate = self
+        
+        return uuid
     }
     
     @objc func disconnect(_ call: CAPPluginCall) {
@@ -220,14 +237,18 @@ public class P2pConnectPlugin: CAPPlugin {
     @objc func sendResource(_ call: CAPPluginCall) {
         
         CAPLog.print("send binary called")
+        CAPLog.print("send binary called => SESSIONS: \(sessions)")
+        
         
         guard let sessionObj = call.getObject("session"),
-              let key = sessionObj["id"] as? String,
-              let session = sessions[key] else {
+              let sessionId = sessionObj["id"] as? String,
+              let session = sessions[sessionId] else {
             
             call.reject("Must provide a valid session")
             return
         }
+        
+        CAPLog.print("sendResource found sessionID: \(sessionId)")
         
         guard let url = call.getString("url") else {
             
@@ -242,7 +263,7 @@ public class P2pConnectPlugin: CAPPlugin {
         }
         
         guard let peerObj = call.getObject("peer"),
-            let key = peerObj["displayName"] as? String else {
+            let displayName = peerObj["displayName"] as? String else {
             
             call.reject("Must provide a peer")
             return
@@ -253,11 +274,16 @@ public class P2pConnectPlugin: CAPPlugin {
             return
         }
         
-        guard let peerId = session.connectedPeers.first(where: {$0.displayName == key}) else{
+        CAPLog.print("sendResource:> urlToSend:\(urlToSend) name:\(name) peerDisplayName:\(displayName) session: \(session)")
+        
+        guard let peerId = session.connectedPeers.first(where: {$0.displayName == displayName}) else{
             call.reject("Peer not connected")
+            
             return
         }
-            
+    
+        CAPLog.print("sendResource:> peerId:\(peerId)")
+        
         let progressRequest = session.sendResource(at: urlToSend, withName: name, toPeer: peerId, withCompletionHandler: nil)
         
         let uuid = UUID().uuidString
@@ -282,21 +308,6 @@ public class P2pConnectPlugin: CAPPlugin {
         }
     
         call.resolve(["isFinished": p.isFinished, "isCancelled": p.isCancelled, "fractionCompleted": p.fractionCompleted])
-    }
-    
-    private func addOrGetSession(session: MCSession) -> String {
-        
-        if let existingSession = sessions.first(where: {$0.value === session}) {
-        
-            return existingSession.key
-        }
-        
-        let uuid = UUID().uuidString
-        sessions[uuid] = session
-        
-        session.delegate = self
-        
-        return uuid
     }
     
 }
