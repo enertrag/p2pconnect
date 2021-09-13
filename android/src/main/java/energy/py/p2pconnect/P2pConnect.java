@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
+import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.util.Log;
@@ -27,9 +28,6 @@ public class P2pConnect {
             plugin.getActivity().finish();
         }
 
-        // manager = (WifiP2pManager) plugin.getContext().getSystemService(Context.WIFI_P2P_SERVICE);
-        // channel = manager.initialize(plugin.getContext(), getMainLooper(), null);
-        
         receiver = new WiFiDirectBroadcastReceiver(manager, channel, plugin);
 
         intentFilter = new IntentFilter();
@@ -74,10 +72,12 @@ public class P2pConnect {
     }
 
     public void start() {
+        Log.e(TAG, "start()");
         plugin.getContext().registerReceiver(receiver, intentFilter);
     }
 
     public void end() {
+        Log.e(TAG, "end()");
         plugin.getContext().unregisterReceiver(receiver);
     }
 
@@ -114,6 +114,8 @@ public class P2pConnect {
     public void connect(String deviceAddress, ActionListenerCallback connectCallback) {
         WifiP2pConfig config = new WifiP2pConfig();
         config.deviceAddress = deviceAddress;
+        config.wps.setup = WpsInfo.PBC;
+
         manager.connect(channel, config, new WifiP2pManager.ActionListener() {
 
             @Override
