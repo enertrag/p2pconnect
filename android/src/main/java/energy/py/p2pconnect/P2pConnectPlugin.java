@@ -15,8 +15,11 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
 
+import java.io.File;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.UUID;
 
 @CapacitorPlugin(
         name = "P2pConnect",
@@ -46,6 +49,8 @@ import java.util.Collection;
 })
 public class P2pConnectPlugin extends Plugin {
 
+    public static String TAG = "P2pConnectPlugin";
+
     private P2pConnect implementation;
 
     public static final String PEER_FOUND_EVENT = "peerFound";
@@ -59,7 +64,7 @@ public class P2pConnectPlugin extends Plugin {
     public void load() {
         Log.e(TAG, "load()");
         implementation = new P2pConnect(this);
-        implementation.start();
+        implementation.registerReceiver();
     }
 
     @PluginMethod
@@ -67,8 +72,6 @@ public class P2pConnectPlugin extends Plugin {
         JSObject ret = new JSObject();
         ret.put("available", implementation.isAvailable());
         call.resolve(ret);
-        notifyListeners("",null);
-        // bridge.triggerJSEvent("", "", "");
     }
 
     @PluginMethod
@@ -76,7 +79,7 @@ public class P2pConnectPlugin extends Plugin {
         if (!allPermissionsGranted()) {
             requestAllPermissions(call, "completeStartAdvertising");
         } else {
-            implementation.start();
+            implementation.startAdvertise();
             JSObject ret = new JSObject();
             call.resolve(ret);
         }
@@ -85,7 +88,7 @@ public class P2pConnectPlugin extends Plugin {
     @PermissionCallback
     private void completeStartAdvertising(PluginCall call) {
         if (allPermissionsGranted()) {
-            implementation.start();
+            implementation.startAdvertise();
         } else {
             call.reject("Location permission was denied");
         }
@@ -93,7 +96,7 @@ public class P2pConnectPlugin extends Plugin {
 
     @PluginMethod
     public void stopAdvertise(PluginCall call) {
-        implementation.end();
+        implementation.endAdvertise();
         JSObject ret = new JSObject();
         call.resolve(ret);
     }
@@ -111,19 +114,21 @@ public class P2pConnectPlugin extends Plugin {
     @PermissionCallback
     private void completeStartBrowsing(PluginCall call) {
         if (allPermissionsGranted()) {
+
             implementation.discoverPeers(new ActionListenerCallback() {
                 @Override
                 public void onSuccess() {
-                    JSObject ret = new JSObject();
-                    ret.put("id", "abc123");
-                    call.resolve(ret);
+                    Log.d(TAG, "discoverPeers SUCCESS");
                 }
 
                 @Override
                 public void onFailure(int code) {
-                    call.reject("Error discovering peers. Code " + code);
+                    Log.e(TAG, "discoverPeers FAILED");
                 }
             });
+            JSObject ret = new JSObject();
+            ret.put("id", "abc123");
+            call.resolve(ret);
         } else {
             call.reject("Location permission was denied");
         }
@@ -154,9 +159,13 @@ public class P2pConnectPlugin extends Plugin {
         JSObject peer = call.getObject("peer");
         String deviceAddress = peer.getString("id");
 
+        Log.e("connect", peer.toString());
+        Log.e("connect", deviceAddress);
+
         implementation.connect(deviceAddress, new ActionListenerCallback() {
             @Override
             public void onSuccess() {
+                Log.e("connect", "SUCCESS");
                 JSObject ret = new JSObject();
                 ret.put("id", "abc123");
                 call.resolve(ret);
@@ -164,6 +173,7 @@ public class P2pConnectPlugin extends Plugin {
 
             @Override
             public void onFailure(int code) {
+                Log.e("connect", "FAILURE");
                 call.reject("Error connecting to peer. Code " + code);
             }
         });
@@ -201,14 +211,34 @@ public class P2pConnectPlugin extends Plugin {
     @PluginMethod
     public void sendResource(PluginCall call) {
 
+        String url = call.getString("url");
+        JSObject peer = call.getObject("peer");
+        String groupOwnerHostAddress = peer.getString("id");
+        String guid = call.getString("name");
+
+        Log.e("sendResource", url);
+        Log.e("sendResource", peer.toString());
+        Log.e("groupOwnerHostAddress", groupOwnerHostAddress);
+        Log.e("name", guid);
+
+        implementation.sendResource(url, guid, groupOwnerHostAddress);
+
         JSObject ret = new JSObject();
+        ret.put("id", guid);
         call.resolve(ret);
     }
 
     @PluginMethod
     public void getProgress(PluginCall call) {
 
+        String id = call.getString("id");
+
+        boolean finished = implementation.isTransferFinished(id);
+
         JSObject ret = new JSObject();
+        ret.put("isFinished", finished);
+        ret.put("isCancelled", false);
+        ret.put("fractionCompleted", false);
         call.resolve(ret);
     }
 
@@ -234,6 +264,52 @@ public class P2pConnectPlugin extends Plugin {
         for (WifiP2pDevice device: peers) {
             notifyListeners(PEER_LOST_EVENT, createBrowserObjectFromDevice(device));
         }
+    }
+
+    public void notifyStartReceive() {
+        notifyListeners(START_RECEIVE_EVENT, createStartReceiveResult());
+    }
+
+    public void notifyReceive(String url) {
+        notifyListeners(RECEIVE_EVENT, createReceiveEvent(url));
+    }
+
+    public void notifyConnect(String groupOwnerAddress) {
+        notifyListeners(CONNECT_EVENT, createConnectEvent(groupOwnerAddress));
+    }
+
+    private JSObject createConnectEvent(String groupOwnerAddress) {
+        JSObject session = new JSObject();
+        session.put("id", groupOwnerAddress);
+
+        JSObject advertiser = new JSObject();
+        advertiser.put("id", "");
+
+        JSObject ret = new JSObject();
+        ret.put("session", session);
+        ret.put("advertiser", advertiser);
+        return ret;
+    }
+
+    private JSObject createReceiveEvent(String url) {
+        JSObject session = new JSObject();
+        session.put("id", "");
+
+        JSObject ret = new JSObject();
+        ret.put("session", session);
+        ret.put("message", "");
+        ret.put("url", url);
+        return ret;
+    }
+
+    private JSObject createStartReceiveResult() {
+        JSObject session = new JSObject();
+        session.put("id", "");
+
+        JSObject ret = new JSObject();
+        ret.put("session", session);
+        ret.put("name", UUID.randomUUID().toString());
+        return ret;
     }
 
     private JSObject createBrowserObjectFromDevice(WifiP2pDevice device) {
