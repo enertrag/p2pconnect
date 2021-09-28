@@ -53,6 +53,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver implements Wi
     }
 
     private void initPeerListener() {
+        Log.d(TAG, "initPeerListener");
         myPeerListListener = new WifiP2pManager.PeerListListener() {
             @Override
             public void onPeersAvailable(WifiP2pDeviceList peerList) {

@@ -106,7 +106,7 @@ public class P2pConnect {
             Log.e(TAG, "Cannot initialize Wi-Fi Direct.");
             return false;
         }
-
+        Log.e(TAG, "initP2p successful");
         return true;
     }
 
@@ -180,6 +180,7 @@ public class P2pConnect {
 
     @SuppressLint("MissingPermission")
     public void discoverPeers(ActionListenerCallback callback) {
+        Log.e(TAG, "discoverPeers()");
 
         startRegistrationAndDiscovery();
 
@@ -197,6 +198,7 @@ public class P2pConnect {
     }
 
     public void stopPeerDiscovery(ActionListenerCallback callback) {
+        Log.e(TAG, "stopPeerDiscovery()");
         /*manager.stopPeerDiscovery(channel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
@@ -212,6 +214,7 @@ public class P2pConnect {
 
     @SuppressLint("MissingPermission")
     public void connect(String deviceAddress, ActionListenerCallback connectCallback) {
+        Log.e(TAG, "connect() " + deviceAddress);
         WifiP2pConfig config = new WifiP2pConfig();
         config.deviceAddress = deviceAddress;
         config.wps.setup = WpsInfo.PBC;
@@ -232,6 +235,7 @@ public class P2pConnect {
     }
 
     public void disconnect(ActionListenerCallback callback) {
+        Log.e(TAG, "disconnect()");
         manager.cancelConnect(channel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
@@ -293,6 +297,7 @@ public class P2pConnect {
 
     @SuppressLint("MissingPermission")
     public void registerLocalService() {
+        Log.d(TAG, "registerLocalService");
         Map<String, String> record = new HashMap<String, String>();
         record.put(TXTRECORD_PROP_AVAILABLE, "visible");
 
@@ -321,6 +326,7 @@ public class P2pConnect {
      */
     @SuppressLint("MissingPermission")
     public void startRegistrationAndDiscovery() {
+        Log.d(TAG, "startRegistrationAndDiscovery");
         registerLocalService();
         discoverService();
     }
