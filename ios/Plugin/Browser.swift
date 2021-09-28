@@ -2,7 +2,6 @@ import Foundation
 import MultipeerConnectivity
 import Capacitor
 
-
 protocol BrowserDelegate: AnyObject {
     
     func peerStateChanged(key: String, displayName: String, found: Bool)
@@ -44,6 +43,7 @@ class Browser: NSObject {
     func stopBrowsingForPeers() {
         
         serviceBrowser.stopBrowsingForPeers()
+        detectedPeers.removeAll()
     }
     
     func connect(peerId: String) -> Bool {
@@ -67,6 +67,7 @@ class Browser: NSObject {
 extension Browser: MCNearbyServiceBrowserDelegate {
     
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
+        CAPLog.print("FoundPeer \(peerID)")
         
         if ignoreLocalDevice, let info = info?["instance"] {
             
@@ -87,7 +88,7 @@ extension Browser: MCNearbyServiceBrowserDelegate {
         
         if let item = detectedPeers.first(where: { $0.value == peerID }) {
 
-            detectedPeers[item.key] = nil
+            detectedPeers.removeValue(forKey: item.key)
             
             delegate?.peerStateChanged(key: item.key, displayName: item.value.displayName, found: false)
         }

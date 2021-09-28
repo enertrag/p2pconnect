@@ -17,54 +17,73 @@ export interface Advertiser {
 
 export interface Browser {
 
-  id: string
+  id: string;
 }
 
 export interface Peer {
 
-  id: string
+  id: string;
 
-  displayName?: string
+  displayName?: string;
 
 }
 
 export interface BrowseOptions {
 
-  displayName?: string
+  displayName?: string;
 
-  serviceType: string
+  serviceType: string;
 
   /**
    * Sets whether to ignore advertisements from your own device.
    */
-  ignoreLocalDevice: boolean
+  ignoreLocalDevice: boolean;
 }
 
 export interface Session {
 
-  id: string
+  id: string;
 }
 
 export interface ConnectResult {
 
-  advertiser: Advertiser
+  advertiser: Advertiser;
 
-  session: Session
+  session: Session;
 
 }
 
 export interface SessionStateResult {
 
-  session: Session
+  session: Session;
 
-  state: SessionState
+  state: SessionState;
 }
 
 export interface ReceiveResult {
 
-  session: Session
+  session: Session;
 
-  message: String
+  message: string;
+
+  url: string;
+}
+
+export interface StartReceiveResult {
+
+  session: Session;
+
+  name: string;
+}
+
+export interface Progress {
+  
+  isFinished: boolean;
+
+  isCancelled: boolean;
+
+  fractionCompleted: number;
+
 }
 
 /**
@@ -133,6 +152,17 @@ export interface P2pConnectPlugin {
   send(options: { session: Session, message: string }): Promise<void>;
 
   /**
+   * Sends an (file or HTTP) URL to all connected devices in a session. Returns the id of the progress.
+   */
+  sendResource(options: { session: Session, peer: Peer, url: string, name: string }): Promise<{id: string}>;
+
+  /**
+   * Get the current progress a send or receive action
+   * @param options 
+   */
+  getProgress(options: { id: string }): Promise<Progress>;
+
+  /**
    * Indicates that a new device has been found nearby.
    * 
    * @since 1.0.0
@@ -169,7 +199,15 @@ export interface P2pConnectPlugin {
   ): Promise<PluginListenerHandle> & PluginListenerHandle;
 
   /**
-   * Indicates that a message has been received.
+   * Indicates that receiving data has been started.
+   */
+   addListener(
+    eventName: 'startReceive',
+    listenerFunc: (result: StartReceiveResult) => void,
+  ): Promise<PluginListenerHandle> & PluginListenerHandle;
+
+  /**
+   * Indicates that a message or url has been received.
    */
   addListener(
     eventName: 'receive',

@@ -21,6 +21,9 @@ npx cap sync
 * [`connect(...)`](#connect)
 * [`disconnect(...)`](#disconnect)
 * [`send(...)`](#send)
+* [`sendResource(...)`](#sendresource)
+* [`getProgress(...)`](#getprogress)
+* [`addListener(...)`](#addlistener)
 * [`addListener(...)`](#addlistener)
 * [`addListener(...)`](#addlistener)
 * [`addListener(...)`](#addlistener)
@@ -173,6 +176,40 @@ Sends a message to all connected devices in a session.
 --------------------
 
 
+### sendResource(...)
+
+```typescript
+sendResource(options: { session: Session; peer: Peer; url: string; name: string; }) => any
+```
+
+Sends an (file or HTTP) URL to all connected devices in a session. Returns the id of the progress.
+
+| Param         | Type                                                                                                                 |
+| ------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **`options`** | <code>{ session: <a href="#session">Session</a>; peer: <a href="#peer">Peer</a>; url: string; name: string; }</code> |
+
+**Returns:** <code>any</code>
+
+--------------------
+
+
+### getProgress(...)
+
+```typescript
+getProgress(options: { id: string; }) => any
+```
+
+Get the current progress a send or receive action
+
+| Param         | Type                         |
+| ------------- | ---------------------------- |
+| **`options`** | <code>{ id: string; }</code> |
+
+**Returns:** <code>any</code>
+
+--------------------
+
+
 ### addListener(...)
 
 ```typescript
@@ -250,10 +287,28 @@ Indicates that the state of the connection has changed.
 ### addListener(...)
 
 ```typescript
+addListener(eventName: 'startReceive', listenerFunc: (result: StartReceiveResult) => void) => Promise<PluginListenerHandle> & PluginListenerHandle
+```
+
+Indicates that receiving data has been started.
+
+| Param              | Type                                                                                   |
+| ------------------ | -------------------------------------------------------------------------------------- |
+| **`eventName`**    | <code>"startReceive"</code>                                                            |
+| **`listenerFunc`** | <code>(result: <a href="#startreceiveresult">StartReceiveResult</a>) =&gt; void</code> |
+
+**Returns:** <code>any</code>
+
+--------------------
+
+
+### addListener(...)
+
+```typescript
 addListener(eventName: 'receive', listenerFunc: (result: ReceiveResult) => void) => Promise<PluginListenerHandle> & PluginListenerHandle
 ```
 
-Indicates that a message has been received.
+Indicates that a message or url has been received.
 
 | Param              | Type                                                                         |
 | ------------------ | ---------------------------------------------------------------------------- |
@@ -321,6 +376,15 @@ Remove all native listeners for this plugin.
 | **`id`** | <code>string</code> |
 
 
+#### Progress
+
+| Prop                    | Type                 |
+| ----------------------- | -------------------- |
+| **`isFinished`**        | <code>boolean</code> |
+| **`isCancelled`**       | <code>boolean</code> |
+| **`fractionCompleted`** | <code>number</code>  |
+
+
 #### PluginListenerHandle
 
 | Prop         | Type                      |
@@ -344,12 +408,21 @@ Remove all native listeners for this plugin.
 | **`state`**   | <code><a href="#sessionstate">SessionState</a></code> |
 
 
+#### StartReceiveResult
+
+| Prop          | Type                                        |
+| ------------- | ------------------------------------------- |
+| **`session`** | <code><a href="#session">Session</a></code> |
+| **`name`**    | <code>string</code>                         |
+
+
 #### ReceiveResult
 
 | Prop          | Type                                        |
 | ------------- | ------------------------------------------- |
 | **`session`** | <code><a href="#session">Session</a></code> |
-| **`message`** | <code>any</code>                            |
+| **`message`** | <code>string</code>                         |
+| **`url`**     | <code>string</code>                         |
 
 
 ### Enums

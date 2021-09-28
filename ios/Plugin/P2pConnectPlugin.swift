@@ -6,7 +6,6 @@ import MultipeerConnectivity
 
 var InstanceId = UUID().uuidString
 
-
 class Log {
     
     static let Info = "🐭  "
@@ -26,6 +25,8 @@ public class P2pConnectPlugin: CAPPlugin {
     
     private var sessions: [String:MCSession] = [:]
     
+    private var progress: [String:Progress] = [:]
+    
     override public func load() {
     }
 
@@ -33,7 +34,8 @@ public class P2pConnectPlugin: CAPPlugin {
     }
     
     @objc func isAvailable(_ call: CAPPluginCall) {
-     
+        
+        CAPLog.print("isAvailable called")
         call.resolve(["available": true])
     }
     
@@ -58,7 +60,6 @@ public class P2pConnectPlugin: CAPPlugin {
     }
     
     @objc func stopAdvertise(_ call: CAPPluginCall) {
-        
         CAPLog.print("stopAdvertise called")
         
         guard let advertiserObj = call.getObject("advertiser") else {
@@ -84,7 +85,7 @@ public class P2pConnectPlugin: CAPPlugin {
     }
     
     @objc func startBrowse(_ call: CAPPluginCall) {
-        
+        CAPLog.print("startBrowse called")
         let displayName = call.getString("displayName")
         
         guard let serviceType = call.getString("serviceType") else {
@@ -93,7 +94,9 @@ public class P2pConnectPlugin: CAPPlugin {
         }
         
         let ignoreLocalDevice = call.getBool("ignoreLocalDevice") ?? true
-        
+        if (ignoreLocalDevice){
+            CAPLog.print("ignore local device")
+        }
         let browser = Browser(displayName: displayName, serviceType: serviceType, ignoreLocalDevice: ignoreLocalDevice)
         browser.delegate = self
 
@@ -132,7 +135,7 @@ public class P2pConnectPlugin: CAPPlugin {
         browser.stopBrowsingForPeers()
         
         // Connect(ing) to nearby devices does not work after this call:
-        serviceBrowsers[key] = nil
+        serviceBrowsers.removeValue(forKey: key)
         
         call.resolve()
     }
@@ -158,13 +161,30 @@ public class P2pConnectPlugin: CAPPlugin {
 
         if !browser.connect(peerId: key) {
             
-            call.reject("Must provide a peer")
+            call.reject("Cannot connect to peer")
             return
         }
         
         let id = addOrGetSession(session: browser.session!)
         
+        CAPLog.print("Connect new SessionID: \(id)")
+        
         call.resolve(["id": id])
+    }
+    
+    private func addOrGetSession(session: MCSession) -> String {
+        
+        if let existingSession = sessions.first(where: {$0.value === session}) {
+            CAPLog.print("addOrGetSession:> existingSession:\(existingSession.key)")
+            return existingSession.key
+        }
+        
+        let uuid = UUID().uuidString
+        sessions[uuid] = session
+        
+        session.delegate = self
+        
+        return uuid
     }
     
     @objc func disconnect(_ call: CAPPluginCall) {
@@ -180,12 +200,14 @@ public class P2pConnectPlugin: CAPPlugin {
         }
         
         session.disconnect()
-        sessions[key] = nil
+        sessions.removeValue(forKey: key)
         
         call.resolve()
     }
     
     @objc func send(_ call: CAPPluginCall) {
+        
+        CAPLog.print("send called")
         
         guard let sessionObj = call.getObject("session"),
               let key = sessionObj["id"] as? String,
@@ -211,21 +233,81 @@ public class P2pConnectPlugin: CAPPlugin {
         
         call.resolve()
     }
-    
  
-    private func addOrGetSession(session: MCSession) -> String {
+    @objc func sendResource(_ call: CAPPluginCall) {
         
-        if let existingSession = sessions.first(where: {$0.value === session}) {
+        CAPLog.print("send binary called")
+        CAPLog.print("send binary called => SESSIONS: \(sessions)")
         
-            return existingSession.key
+        
+        guard let sessionObj = call.getObject("session"),
+              let sessionId = sessionObj["id"] as? String,
+              let session = sessions[sessionId] else {
+            
+            call.reject("Must provide a valid session")
+            return
         }
         
+        CAPLog.print("sendResource found sessionID: \(sessionId)")
+        
+        guard let url = call.getString("url") else {
+            
+            call.reject("Must provide an url")
+            return
+        }
+        
+        guard let name = call.getString("name") else {
+            
+            call.reject("Must provide a name")
+            return
+        }
+        
+        guard let peerObj = call.getObject("peer"),
+            let displayName = peerObj["displayName"] as? String else {
+            
+            call.reject("Must provide a peer")
+            return
+        }
+        
+        guard let urlToSend = URL(string: url) else{
+            call.reject("Must provide a valid url")
+            return
+        }
+        
+        CAPLog.print("sendResource:> urlToSend:\(urlToSend) name:\(name) peerDisplayName:\(displayName) session: \(session)")
+        
+        guard let peerId = session.connectedPeers.first(where: {$0.displayName == displayName}) else{
+            call.reject("Peer not connected")
+            
+            return
+        }
+    
+        CAPLog.print("sendResource:> peerId:\(peerId)")
+        
+        let progressRequest = session.sendResource(at: urlToSend, withName: name, toPeer: peerId, withCompletionHandler: nil)
+        
         let uuid = UUID().uuidString
-        sessions[uuid] = session
+        progress[uuid] = progressRequest
         
-        session.delegate = self
+        call.resolve(["id": uuid])
+    }
+ 
+    @objc func getProgress(_ call: CAPPluginCall) {
         
-        return uuid
+        CAPLog.print("getProgress called")
+        
+        guard let id = call.getString("id") else{
+            call.reject("Must provide an id for the progress")
+            return
+        }
+        
+        guard let p = progress[id] else {
+            
+            call.reject("Progress unkown")
+            return
+        }
+    
+        call.resolve(["isFinished": p.isFinished, "isCancelled": p.isCancelled, "fractionCompleted": p.fractionCompleted])
     }
     
 }
@@ -233,6 +315,8 @@ public class P2pConnectPlugin: CAPPlugin {
 extension P2pConnectPlugin: BrowserDelegate {
     
     func peerStateChanged(key: String, displayName: String, found: Bool) {
+        
+        CAPLog.print("peerStateChanged \(key) \(displayName) \(found)")
         
         notifyListeners(found ? "peerFound" : "peerLost", data: ["id": key, "displayName": displayName])
     }
@@ -243,6 +327,8 @@ extension P2pConnectPlugin: AdvertiserDelegate {
     
     func advertiserConnected(advertiserId: String, session: MCSession) {
     
+        CAPLog.print("advertiserConnected \(advertiserId)")
+        
         let sessionId = addOrGetSession(session: session)
         
         notifyListeners("connect", data: ["advertiser": ["id": advertiserId], "session": ["id": sessionId]])
@@ -254,34 +340,36 @@ extension P2pConnectPlugin: MCSessionDelegate {
     
     public func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
         
-        let s = sessions.first(where: {$0.value === session})!
-        
+        guard let s = sessions.first(where: {$0.value === session}) else {
+            return
+        }
+           
         var jsState: String
         switch state {
         case .notConnected:
             jsState = "notConnected"
         case .connecting:
-            jsState = "connecting"
-        case .connected:
-            jsState = "connected"
-        @unknown default:
-            CAPLog.print(Log.Fatal, self.pluginId, "-", "unknown MCSessionState")
-            jsState = "unknown"
-        }
+           jsState = "connecting"
+       case .connected:
+           jsState = "connected"
+       @unknown default:
+           CAPLog.print(Log.Fatal, self.pluginId, "-", "unknown MCSessionState")
+           jsState = "unknown"
+       }
+       
+       notifyListeners("sessionStateChange", data: [
+           "session": ["id": s.key],
+           "state": jsState
+       ])
+       
+       CAPLog.print("\(s.key) -> didChangeState \(state.rawValue)")
         
-        notifyListeners("sessionStateChange", data: [
-            "session": ["id": s.key],
-            "state": jsState
-        ])
-        
-        
-        CAPLog.print("\(s.key) -> didChangeState \(state.rawValue)")
     }
     
     public func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
 
+        CAPLog.print("didReceive from peer")
         if let item = sessions.first(where: {$0.value === session}) {
-            
             
             let message = String(decoding: data, as: UTF8.self)
             
@@ -292,6 +380,7 @@ extension P2pConnectPlugin: MCSessionDelegate {
         }
     }
     
+    
     public func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
         
         CAPLog.print("didReceive withName")
@@ -299,11 +388,29 @@ extension P2pConnectPlugin: MCSessionDelegate {
     
     public func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
         
+        if let item = sessions.first(where: {$0.value === session}) {
+            
+            notifyListeners("startReceive", data: [
+                "session": ["id": item.key],
+                "name": resourceName
+            ])
+        }
+        
         CAPLog.print("didReceive withName & progress")
     }
     
     public func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {
         
+        if let item = sessions.first(where: {$0.value === session}) {
+            
+            let url = localURL?.absoluteString
+            
+            notifyListeners("receive", data: [
+                "session": ["id": item.key],
+                "url": url
+            ])
+        }
+       
         CAPLog.print("didFinishReceiving")
     }
     
