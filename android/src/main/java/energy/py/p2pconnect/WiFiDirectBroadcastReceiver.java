@@ -1,24 +1,16 @@
 package energy.py.p2pconnect;
 
-import static android.content.ContentValues.TAG;
 
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.net.NetworkInfo;
-import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
-
-import androidx.core.content.FileProvider;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -38,8 +30,6 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver implements Wi
     public P2pConnectPlugin activity;
     private ArrayList<WifiP2pDevice> peers = new ArrayList<>();
 
-    WifiP2pManager.PeerListListener myPeerListListener;
-
     private boolean wifiP2pState;
 
     public WiFiDirectBroadcastReceiver(WifiP2pManager manager, WifiP2pManager.Channel channel,
@@ -48,24 +38,6 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver implements Wi
         this.manager = manager;
         this.channel = channel;
         this.activity = activity;
-
-        // initPeerListener();
-    }
-
-    private void initPeerListener() {
-        Log.d(TAG, "initPeerListener");
-        myPeerListListener = new WifiP2pManager.PeerListListener() {
-            @Override
-            public void onPeersAvailable(WifiP2pDeviceList peerList) {
-
-                activity.notifyPeersLost(peers);
-
-                peers.clear();
-                peers.addAll(peerList.getDeviceList());
-
-                activity.notifyPeersFound(peerList.getDeviceList());
-            }
-        };
     }
 
     @SuppressLint("MissingPermission")
@@ -85,14 +57,6 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver implements Wi
             }
         } else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
 
-            // request available peers from the wifi p2p manager. This is an
-            // asynchronous call and the calling activity is notified with a
-            // callback on PeerListListener.onPeersAvailable()
-            /*if (manager != null) {
-                manager.requestPeers(channel, myPeerListListener);
-            }
-            Log.d("BroadcastReceiver", "P2P peers changed");*/
-
         } else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
             // Respond to new connection or disconnections
             if (manager == null) {
@@ -106,7 +70,6 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver implements Wi
 
                 // We are connected with the other device, request connection
                 // info to find group owner IP
-
                 manager.requestConnectionInfo(channel, this);
             }
         } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {

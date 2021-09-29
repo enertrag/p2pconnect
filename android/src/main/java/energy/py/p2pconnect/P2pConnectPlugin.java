@@ -1,7 +1,5 @@
 package energy.py.p2pconnect;
 
-import static android.content.ContentValues.TAG;
-
 import android.Manifest;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.util.Log;
@@ -15,8 +13,6 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
 
-import java.io.File;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
@@ -159,8 +155,8 @@ public class P2pConnectPlugin extends Plugin {
         JSObject peer = call.getObject("peer");
         String deviceAddress = peer.getString("id");
 
-        Log.e("connect", peer.toString());
-        Log.e("connect", deviceAddress);
+        Log.d("connect", peer.toString());
+        Log.d("connect", deviceAddress);
 
         implementation.connect(deviceAddress, new ActionListenerCallback() {
             @Override
@@ -216,10 +212,10 @@ public class P2pConnectPlugin extends Plugin {
         String groupOwnerHostAddress = peer.getString("id");
         String guid = call.getString("name");
 
-        Log.e("sendResource", url);
-        Log.e("sendResource", peer.toString());
-        Log.e("groupOwnerHostAddress", groupOwnerHostAddress);
-        Log.e("name", guid);
+        Log.d("sendResource", url);
+        Log.d("sendResource", peer.toString());
+        Log.d("groupOwnerHostAddress", groupOwnerHostAddress);
+        Log.d("name", guid);
 
         implementation.sendResource(url, guid, groupOwnerHostAddress);
 
