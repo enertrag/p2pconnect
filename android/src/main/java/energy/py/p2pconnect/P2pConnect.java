@@ -1,364 +1,312 @@
 package energy.py.p2pconnect;
 
-import static android.os.Looper.getMainLooper;
-
-import static energy.py.p2pconnect.WiFiDirectBroadcastReceiver.copyFile;
-
-import android.annotation.SuppressLint;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.net.wifi.WifiManager;
-import android.net.wifi.WpsInfo;
-import android.net.wifi.p2p.WifiP2pConfig;
+import android.Manifest;
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pManager;
-import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceInfo;
-import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceRequest;
+import android.provider.Settings;
 import android.util.Log;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
-import java.net.Socket;
+
+import com.getcapacitor.JSObject;
+import com.getcapacitor.PermissionState;
+import com.getcapacitor.Plugin;
+import com.getcapacitor.PluginCall;
+import com.getcapacitor.PluginMethod;
+import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
+
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collection;
+import java.util.UUID;
 
-public class P2pConnect {
+@CapacitorPlugin(
+        name = "P2pConnect",
+        permissions = {
 
-    public static String TAG = "P2pConnect";
-
-    public static final String TXTRECORD_PROP_AVAILABLE = "available";
-    public static final String SERVICE_INSTANCE = "_enertragP2PConnect";
-    public static final String SERVICE_REG_TYPE = "_presence._tcp";
-
-    P2pConnectPlugin plugin;
-    WifiP2pManager manager;
-    WifiP2pManager.Channel channel;
-    WiFiDirectBroadcastReceiver receiver;
-    IntentFilter intentFilter;
-
-    private Intent receiverIntent;
-    private WifiP2pDnsSdServiceRequest serviceRequest;
-    private WifiP2pDnsSdServiceInfo service;
-
-    public P2pConnect(P2pConnectPlugin p2pConnectPlugin) {
-        plugin = p2pConnectPlugin;
-
-        if (!initP2p()) {
-            plugin.getActivity().finish();
-        }
-
-        receiver = new WiFiDirectBroadcastReceiver(manager, channel, plugin);
-
-        intentFilter = new IntentFilter();
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-    }
-
-    private boolean initP2p() {
-        // Device capability definition check
-        if (!plugin.getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT)) {
-            Log.e(TAG, "Wi-Fi Direct is not supported by this device.");
-            return false;
-        }
-
-        // Hardware capability check
-        WifiManager wifiManager = (WifiManager) plugin.getContext().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        if (wifiManager == null) {
-            Log.e(TAG, "Cannot get Wi-Fi system service.");
-            return false;
-        }
-
-        if (!wifiManager.isP2pSupported()) {
-            Log.e(TAG, "Wi-Fi Direct is not supported by the hardware or Wi-Fi is off.");
-            return false;
-        }
-
-        manager = (WifiP2pManager) plugin.getContext().getSystemService(Context.WIFI_P2P_SERVICE);
-        if (manager == null) {
-            Log.e(TAG, "Cannot get Wi-Fi Direct system service.");
-            return false;
-        }
-
-        channel = manager.initialize(plugin.getContext(), getMainLooper(), null);
-        if (channel == null) {
-            Log.e(TAG, "Cannot initialize Wi-Fi Direct.");
-            return false;
-        }
-
-        return true;
-    }
-
-    public void registerReceiver() {
-        Log.e(TAG, "registerReceiver()");
-        if (receiverIntent == null)
-            receiverIntent = plugin.getContext().registerReceiver(receiver, intentFilter);
-    }
-    public void unregisterReceiver() {
-        Log.e(TAG, "unregisterReceiver()");
-        plugin.getContext().unregisterReceiver(receiver);
-        receiverIntent = null;
-    }
-
-    @SuppressLint("MissingPermission")
-    public void startAdvertise() {
-        Log.e(TAG, "startAdvertise()");
-        registerReceiver();
-        startRegistrationAndDiscovery();
-    }
-
-    public void endAdvertise() {
-        Log.e(TAG, "endAdvertise()");
-        unregisterReceiver();
-        endRegistrationAndDiscovery();
-    }
-
-    @SuppressLint("MissingPermission")
-    public void discoverPeers(ActionListenerCallback callback) {
-        registerReceiver();
-        startRegistrationAndDiscovery();
-    }
-
-    public void stopPeerDiscovery(ActionListenerCallback callback) {
-        Log.e(TAG, "stopPeerDiscovery()");
-        unregisterReceiver();
-        endRegistrationAndDiscovery();
-    }
-
-    @SuppressLint("MissingPermission")
-    public void connect(String deviceAddress, ActionListenerCallback connectCallback) {
-        WifiP2pConfig config = new WifiP2pConfig();
-        config.deviceAddress = deviceAddress;
-        config.wps.setup = WpsInfo.PBC;
-        config.groupOwnerIntent = 0;
-
-        manager.connect(channel, config, new WifiP2pManager.ActionListener() {
-
-            @Override
-            public void onSuccess() {
-                connectCallback.onSuccess();
-            }
-
-            @Override
-            public void onFailure(int reason) {
-                connectCallback.onFailure(reason);
-            }
-        });
-    }
-
-    public void disconnect(ActionListenerCallback callback) {
-        manager.cancelConnect(channel, new WifiP2pManager.ActionListener() {
-            @Override
-            public void onSuccess() {
-                callback.onSuccess();
-            }
-
-            @Override
-            public void onFailure(int reasonCode) {
-                callback.onFailure(reasonCode);
-            }
-        });
-    }
-
-    public boolean isAvailable() {
-        return receiver.isAvailable();
-    }
-
-    private final ArrayList<String> finishedTransfers = new ArrayList<>();
-
-    public void sendResource(String url, String guid, String hostAddress) {
-
-        Socket socket = new Socket();
-
-        try {
-            Log.d("sendResource", "Opening client socket - ");
-            socket.bind(null);
-
-            socket.connect((new InetSocketAddress(hostAddress, 8988)), 10000);
-
-            Log.d("sendResource", "Client socket - " + socket.isConnected());
-            OutputStream stream = socket.getOutputStream();
-            ContentResolver cr = plugin.getContext().getContentResolver();
-            InputStream is = null;
-            try {
-                is = cr.openInputStream(Uri.parse(url));
-            } catch (FileNotFoundException e) {
-                Log.d("sendResource", e.toString());
-            }
-            copyFile(is, stream);
-            Log.d("sendResource", "Client: Data written");
-            finishedTransfers.add(guid);
-            Log.d("sendResource", "Added finished transfer: "  + guid);
-        } catch (IOException e) {
-            Log.e("sendResource", e.getMessage());
-        } finally {
-            if (socket != null) {
-                if (socket.isConnected()) {
-                    try {
-                        Log.d("sendResource", "Closing socket");
-                        socket.close();
-                    } catch (IOException e) {
-                        // Give up
-                        e.printStackTrace();
+                @Permission(
+                    alias = "location",
+                    strings = {
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            // Manifest.permission.NEARBY_WIFI_DEVICES
                     }
-                }
-            }
-        }
-    }
-
-
-    /**
-     * Registers a local service and then initiates a service discovery
-     */
-    @SuppressLint("MissingPermission")
-    public void startRegistrationAndDiscovery() {
-        registerLocalService();
-        discoverService();
-    }
-
-    public void endRegistrationAndDiscovery() {
-        manager.removeLocalService(channel, service, new WifiP2pManager.ActionListener() {
-            @Override
-            public void onSuccess() {
-                Log.d(TAG, "Removed Local Service");
-            }
-
-            @Override
-            public void onFailure(int i) {
-                Log.d(TAG, "Failed to remove a service");
-            }
-        });
-
-        manager.stopPeerDiscovery(channel, new WifiP2pManager.ActionListener() {
-            @Override
-            public void onSuccess() {
-                Log.d(TAG, "Stopped peer discovery");
-            }
-
-            @Override
-            public void onFailure(int i) {
-                Log.d(TAG, "Failed stopping peer discovery");
-            }
-        });
-
-        manager.removeServiceRequest(channel, serviceRequest, new WifiP2pManager.ActionListener() {
-            @Override
-            public void onSuccess() {
-                Log.d(TAG, "Removed service request");
-            }
-
-            @Override
-            public void onFailure(int i) {
-                Log.d(TAG, "Failed removing service request");
-            }
-        });
-    }
-
-    @SuppressLint("MissingPermission")
-    public void registerLocalService() {
-        Map<String, String> record = new HashMap<String, String>();
-        record.put(TXTRECORD_PROP_AVAILABLE, "visible");
-
-        service = WifiP2pDnsSdServiceInfo.newInstance(
-                SERVICE_INSTANCE, SERVICE_REG_TYPE, record);
-
-        manager.addLocalService(channel, service, new WifiP2pManager.ActionListener() {
-
-            @Override
-            public void onSuccess() {
-                Log.d(TAG, "Added Local Service");
-            }
-
-            @Override
-            public void onFailure(int error) {
-                Log.d(TAG, "Failed to add a service");
-            }
-        });
-
-
-    }
-
-    @SuppressLint("MissingPermission")
-    private void discoverService() {
-
-        /*
-         * Register listeners for DNS-SD services. These are callbacks invoked
-         * by the system when a service is actually discovered.
-         */
-
-        manager.setDnsSdResponseListeners(channel,
-                new WifiP2pManager.DnsSdServiceResponseListener() {
-
-                    @Override
-                    public void onDnsSdServiceAvailable(String instanceName,
-                                                        String registrationType, WifiP2pDevice srcDevice) {
-
-                        // A service has been discovered. Is this our app?
-
-                        if (instanceName.equalsIgnoreCase(SERVICE_INSTANCE)) {
-
-                            ArrayList<WifiP2pDevice> wifiP2pDevices = new ArrayList<>();
-                            wifiP2pDevices.add(srcDevice);
-                            plugin.notifyPeersFound(wifiP2pDevices);
+                ),
+                @Permission(
+                        alias = "wifi",
+                        strings = {
+                                Manifest.permission.ACCESS_WIFI_STATE,
+                                Manifest.permission.CHANGE_WIFI_STATE
                         }
+                ),
+                @Permission(
+                        alias = "bluetooth",
+                        strings = {
+                                Manifest.permission.BLUETOOTH_ADMIN,
+                                Manifest.permission.BLUETOOTH
+                        }
+                ),
+                @Permission(
+                        alias = "file",
+                        strings = {
+                                Manifest.permission.READ_EXTERNAL_STORAGE,
+                        }
+                )
+})
+public class P2pConnect extends Plugin {
 
-                    }
-                }, new WifiP2pManager.DnsSdTxtRecordListener() {
+    public static String TAG = "P2pConnectPlugin";
 
-                    /**
-                     * A new TXT record is available. Pick up the advertised
-                     * buddy name.
-                     */
-                    @Override
-                    public void onDnsSdTxtRecordAvailable(
-                            String fullDomainName, Map<String, String> record,
-                            WifiP2pDevice device) {
-                        Log.d(TAG,
-                                device.deviceName + " is "
-                                        + record.get(TXTRECORD_PROP_AVAILABLE));
-                    }
-                });
+    private IP2pConnect implementation;
 
-        // After attaching listeners, create a service request and initiate
-        // discovery.
-        serviceRequest = WifiP2pDnsSdServiceRequest.newInstance();
-        manager.addServiceRequest(channel, serviceRequest,
-                new WifiP2pManager.ActionListener() {
+    public static final String PEER_FOUND_EVENT = "peerFound";
+    public static final String PEER_LOST_EVENT = "peerLost";
+    public static final String CONNECT_EVENT = "connect";
+    public static final String SESSION_STATE_CHANGE_EVENT = "sessionStateChange";
+    public static final String START_RECEIVE_EVENT = "startReceive";
+    public static final String RECEIVE_EVENT = "receive";
 
-                    @Override
-                    public void onSuccess() {
-                        Log.d(TAG, "Added service discovery request");
-                    }
+    private String _lastDisplayName = Settings.Global.getString(getContext().getContentResolver(), "device_name");;
 
-                    @Override
-                    public void onFailure(int arg0) {
-                        Log.d(TAG, "Failed adding service discovery request");
-                    }
-                });
-        manager.discoverServices(channel, new WifiP2pManager.ActionListener() {
+    @Override
+    public void load() {
+        Log.i(TAG, "load()");
+        implementation = new P2pConnectNearbyImpl(this);
 
-            @Override
-            public void onSuccess() {
-                Log.d(TAG, "Service discovery initiated");
-            }
 
-            @Override
-            public void onFailure(int arg0) {
-                Log.d(TAG, "Service discovery failed");
-            }
-        });
+
+        implementation.initialize();
     }
 
-    public boolean isTransferFinished(String id) {
-        Log.d("isTransferFinished", "Looking for finished transfer: " + id);
-        return finishedTransfers.contains(id);
+    @PluginMethod
+    public void isAvailable(PluginCall call) {
+        JSObject ret = new JSObject();
+        ret.put("available", implementation.isAvailable());
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void startAdvertise(PluginCall call) {
+
+        if (!allPermissionsGranted()) {
+            requestAllPermissions(call, "completeStartAdvertising");
+        } else {
+            completeStartAdvertising(call);
+        }
+    }
+
+    @PermissionCallback
+    private void completeStartAdvertising(PluginCall call) {
+        if (allPermissionsGranted()) {
+
+            String serviceId = call.getString("serviceType");
+            String displayName = call.getString("displayName");
+
+            if(displayName == null) {
+                displayName = Settings.Global.getString(getContext().getContentResolver(), "device_name");
+            }
+
+            implementation.startAdvertise(displayName, serviceId);
+            JSObject ret = new JSObject();
+            call.resolve(ret);
+        } else {
+            call.reject("Location permission was denied");
+        }
+    }
+
+    @PluginMethod
+    public void stopAdvertise(PluginCall call) {
+        implementation.endAdvertise();
+        JSObject ret = new JSObject();
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void startBrowse(PluginCall call) {
+
+        if (!allPermissionsGranted()) {
+            requestAllPermissions(call, "completeStartBrowsing");
+        } else {
+            completeStartBrowsing(call);
+        }
+    }
+
+    @PermissionCallback
+    private void completeStartBrowsing(PluginCall call) {
+        if (allPermissionsGranted()) {
+
+            String serviceId = call.getString("serviceType");
+            String displayName = call.getString("displayName");
+
+            if(displayName == null) {
+                displayName = Settings.Global.getString(getContext().getContentResolver(), "device_name");
+            }
+            // A little bit "hacky" at this point: We remember the name of the searching device because we need it again when we connect.
+            _lastDisplayName = displayName;
+
+            implementation.startDiscover(displayName, serviceId);
+
+            JSObject ret = new JSObject();
+            ret.put("id", "abc123");
+            call.resolve(ret);
+        } else {
+            call.reject("Location permission was denied");
+        }
+    }
+
+    @PluginMethod
+    public void stopBrowse(PluginCall call) {
+
+        implementation.endDiscover();
+
+        JSObject ret = new JSObject();
+        call.resolve(ret);
+
+        //        call.reject("Error stopping peer discovery. Code " + code);
+    }
+
+    @PluginMethod
+    public void connect(PluginCall call) {
+
+        JSObject peer = call.getObject("peer");
+        String deviceAddress = peer.getString("id");
+
+        Log.d("connect", peer.toString());
+        Log.d("connect", deviceAddress);
+
+        implementation.connect(deviceAddress, /* see above */_lastDisplayName,
+            (String peerId) -> {
+                JSObject ret = new JSObject();
+                ret.put("id", peerId);
+                call.resolve(ret);
+            },
+            (Exception e) -> {
+                call.reject("Error connecting to peer");
+            });
+    }
+
+    @PluginMethod
+    public void disconnect(PluginCall call) {
+
+        JSObject peer = call.getObject("session");
+        String deviceAddress = peer.getString("id");
+
+        implementation.disconnect(deviceAddress);
+
+        JSObject ret = new JSObject();
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void send(PluginCall call) {
+
+        JSObject ret = new JSObject();
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void sendResource(PluginCall call) {
+
+        String url = call.getString("url");
+        JSObject peer = call.getObject("peer");
+        String groupOwnerHostAddress = peer.getString("id");
+        String guid = call.getString("name");
+
+        Log.d("sendResource", url);
+        Log.d("sendResource", peer.toString());
+        Log.d("groupOwnerHostAddress", groupOwnerHostAddress);
+        Log.d("name", guid);
+
+      //  implementation.sendResource(url, guid, groupOwnerHostAddress);
+
+        JSObject ret = new JSObject();
+        ret.put("id", guid);
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void getProgress(PluginCall call) {
+
+        String id = call.getString("id");
+
+        boolean finished = false; // implementation.isTransferFinished(id);
+
+        JSObject ret = new JSObject();
+        ret.put("isFinished", finished);
+        ret.put("isCancelled", false);
+        ret.put("fractionCompleted", false);
+        call.resolve(ret);
+    }
+
+    private boolean allPermissionsGranted() {
+        return
+            getPermissionState("location") == PermissionState.GRANTED &&
+            getPermissionState("wifi") == PermissionState.GRANTED &&
+            getPermissionState("bluetooth") == PermissionState.GRANTED &&
+            getPermissionState("file") == PermissionState.GRANTED;
+    }
+
+
+    public void notifyPeerFound(Peer peer) {
+        if (peer == null) return;
+
+        notifyListeners(PEER_FOUND_EVENT, createBrowserObjectFromDevice(peer));
+    }
+
+    public void notifyPeerLost(Peer peer) {
+        if (peer == null) return;
+
+        notifyListeners(PEER_LOST_EVENT, createBrowserObjectFromDevice(peer));
+    }
+
+    public void notifyStartReceive() {
+        notifyListeners(START_RECEIVE_EVENT, createStartReceiveResult());
+    }
+
+    public void notifyReceive(String url) {
+        notifyListeners(RECEIVE_EVENT, createReceiveEvent(url));
+    }
+
+    public void notifyConnect(String groupOwnerAddress) {
+        notifyListeners(CONNECT_EVENT, createConnectEvent(groupOwnerAddress));
+    }
+
+    private JSObject createConnectEvent(String groupOwnerAddress) {
+        JSObject session = new JSObject();
+        session.put("id", groupOwnerAddress);
+
+        JSObject advertiser = new JSObject();
+        advertiser.put("id", "");
+
+        JSObject ret = new JSObject();
+        ret.put("session", session);
+        ret.put("advertiser", advertiser);
+        return ret;
+    }
+
+    private JSObject createReceiveEvent(String url) {
+        JSObject session = new JSObject();
+        session.put("id", "");
+
+        JSObject ret = new JSObject();
+        ret.put("session", session);
+        ret.put("message", "");
+        ret.put("url", url);
+        return ret;
+    }
+
+    private JSObject createStartReceiveResult() {
+        JSObject session = new JSObject();
+        session.put("id", "");
+
+        JSObject ret = new JSObject();
+        ret.put("session", session);
+        ret.put("name", UUID.randomUUID().toString());
+        return ret;
+    }
+
+    private JSObject createBrowserObjectFromDevice(Peer device) {
+        JSObject ret = new JSObject();
+        ret.put("id", device.id);
+        ret.put("displayName", device.name);
+        return ret;
     }
 }
