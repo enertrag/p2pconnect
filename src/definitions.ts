@@ -136,6 +136,7 @@ export interface P2pConnectPlugin {
    * Connects to a nearby device.
    * 
    * @param options 
+   * 
    */
   connect(options: { browser: Browser, peer: Peer }): Promise<Session>;
 
@@ -174,6 +175,8 @@ export interface P2pConnectPlugin {
 
   /**
    * Indicates that a nearby device is no longer available.
+   * 
+   * @android: the peer name is always null
    * 
    */
   addListener(

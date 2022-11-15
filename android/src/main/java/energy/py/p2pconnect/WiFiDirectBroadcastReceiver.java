@@ -27,13 +27,13 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver implements Wi
 
     private WifiP2pManager manager;
     private WifiP2pManager.Channel channel;
-    public P2pConnectPlugin activity;
+    public P2pConnect activity;
     private ArrayList<WifiP2pDevice> peers = new ArrayList<>();
 
     private boolean wifiP2pState;
 
     public WiFiDirectBroadcastReceiver(WifiP2pManager manager, WifiP2pManager.Channel channel,
-                                       P2pConnectPlugin activity) {
+                                       P2pConnect activity) {
         super();
         this.manager = manager;
         this.channel = channel;
@@ -108,14 +108,14 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver implements Wi
 
         private Context context;
         private String statusText;
-        private P2pConnectPlugin activity;
+        private P2pConnect activity;
 
         /**
          * @param context
          * @param statusText
          * @param activity
          */
-        public FileServerAsyncTask(Context context, String statusText, P2pConnectPlugin activity) {
+        public FileServerAsyncTask(Context context, String statusText, P2pConnect activity) {
             this.context = context;
             this.statusText = statusText;
             this.activity = activity;
