@@ -14,6 +14,7 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
@@ -63,8 +64,10 @@ public class P2pConnect extends Plugin {
     public static final String SESSION_STATE_CHANGE_EVENT = "sessionStateChange";
     public static final String START_RECEIVE_EVENT = "startReceive";
     public static final String RECEIVE_EVENT = "receive";
+    public static final String MESSAGE_EVENT = "message";
+    public static final String FILE_PROGRESS_EVENT = "fileProgress";
 
-    private String _lastDisplayName = Settings.Global.getString(getContext().getContentResolver(), "device_name");;
+    private String _lastDisplayName = null; //Settings.Global.getString(getContext().getContentResolver(), "device_name");
 
     @Override
     public void load() {
@@ -198,6 +201,36 @@ public class P2pConnect extends Plugin {
     @PluginMethod
     public void send(PluginCall call) {
 
+        JSObject session = call.getObject("session");
+        String peerId = session.getString("id");
+
+        String message = call.getString("message");
+
+        implementation.sendMessage(peerId, message);
+
+        JSObject ret = new JSObject();
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void sendFile(PluginCall call) {
+
+        JSObject session = call.getObject("session");
+        String endpointId = session.getString("id");
+
+        String url = call.getString("url");
+
+        try {
+            implementation.sendFile(endpointId, url);
+        }
+        catch(FileNotFoundException ex) {
+
+            Log.e(TAG, "sendFile(): failed", ex);
+
+            call.reject("fileNotFound");
+            return;
+        }
+
         JSObject ret = new JSObject();
         call.resolve(ret);
     }
@@ -244,6 +277,10 @@ public class P2pConnect extends Plugin {
             getPermissionState("file") == PermissionState.GRANTED;
     }
 
+    public void notifyMessage(String peerId, String message)  {
+
+        notifyListeners(MESSAGE_EVENT, createBrowserObjectForMessage(peerId, message));
+    }
 
     public void notifyPeerFound(Peer peer) {
         if (peer == null) return;
@@ -268,6 +305,67 @@ public class P2pConnect extends Plugin {
     public void notifyConnect(String groupOwnerAddress) {
         notifyListeners(CONNECT_EVENT, createConnectEvent(groupOwnerAddress));
     }
+
+    public void notifySessionStateChanged(String state, String peerId) {
+        notifyListeners(SESSION_STATE_CHANGE_EVENT, createSessionStateEvent(state, peerId));
+    }
+
+    public void notifyFileProgress(TransferState state, int percentage, String uri) {
+        notifyListeners(FILE_PROGRESS_EVENT, createFileProgress(state, percentage, uri));
+    }
+
+    private JSObject createBrowserObjectForMessage(String peerId, String message) {
+
+        JSObject result = new JSObject();
+        result.put("message", message);
+
+        JSObject session = new JSObject();
+        session.put("id", peerId);
+
+        result.put("session", session);
+
+        return result;
+    }
+
+    private JSObject createFileProgress(TransferState state, int percentage, String uri) {
+
+        JSObject result = new JSObject();
+
+        String v = "unknown";
+        switch(state) {
+            case Success:
+                v = "success";
+                break;
+            case InProgress:
+                v = "inProgress";
+                break;
+            case Canceled:
+                v = "canceled";
+                break;
+            case Failure:
+                v = "failure";
+                break;
+        }
+
+        result.put("status", v);
+        result.put("percentage", percentage);
+        result.put("uri", uri);
+
+        return result;
+    }
+
+
+    private JSObject createSessionStateEvent(String state, String peerId) {
+        JSObject session = new JSObject();
+        session.put("id", peerId);
+
+        JSObject sessionState = new JSObject();
+        sessionState.put("session", session);
+        sessionState.put("state", state);
+
+        return sessionState;
+    }
+
 
     private JSObject createConnectEvent(String groupOwnerAddress) {
         JSObject session = new JSObject();

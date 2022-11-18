@@ -21,8 +21,11 @@ npx cap sync
 * [`connect(...)`](#connect)
 * [`disconnect(...)`](#disconnect)
 * [`send(...)`](#send)
+* [`sendFile(...)`](#sendfile)
 * [`sendResource(...)`](#sendresource)
 * [`getProgress(...)`](#getprogress)
+* [`addListener(...)`](#addlistener)
+* [`addListener(...)`](#addlistener)
 * [`addListener(...)`](#addlistener)
 * [`addListener(...)`](#addlistener)
 * [`addListener(...)`](#addlistener)
@@ -176,6 +179,23 @@ Sends a message to all connected devices in a session.
 --------------------
 
 
+### sendFile(...)
+
+```typescript
+sendFile(options: { session: Session; url: string; }) => any
+```
+
+Sends a file to a peer in a session.
+
+| Param         | Type                                                                   |
+| ------------- | ---------------------------------------------------------------------- |
+| **`options`** | <code>{ session: <a href="#session">Session</a>; url: string; }</code> |
+
+**Returns:** <code>any</code>
+
+--------------------
+
+
 ### sendResource(...)
 
 ```typescript
@@ -320,6 +340,42 @@ Indicates that a message or url has been received.
 --------------------
 
 
+### addListener(...)
+
+```typescript
+addListener(eventName: 'message', listenerFunc: (result: MessageResult) => void) => Promise<PluginListenerHandle> & PluginListenerHandle
+```
+
+Indicates that a text message has been received.
+
+| Param              | Type                                                                         |
+| ------------------ | ---------------------------------------------------------------------------- |
+| **`eventName`**    | <code>"message"</code>                                                       |
+| **`listenerFunc`** | <code>(result: <a href="#messageresult">MessageResult</a>) =&gt; void</code> |
+
+**Returns:** <code>any</code>
+
+--------------------
+
+
+### addListener(...)
+
+```typescript
+addListener(eventName: 'fileProgress', listenerFunc: (result: FileProgressResult) => void) => Promise<PluginListenerHandle> & PluginListenerHandle
+```
+
+Indicates that a file transfer progress has been received.
+
+| Param              | Type                                                                                   |
+| ------------------ | -------------------------------------------------------------------------------------- |
+| **`eventName`**    | <code>"fileProgress"</code>                                                            |
+| **`listenerFunc`** | <code>(result: <a href="#fileprogressresult">FileProgressResult</a>) =&gt; void</code> |
+
+**Returns:** <code>any</code>
+
+--------------------
+
+
 ### removeAllListeners()
 
 ```typescript
@@ -425,6 +481,25 @@ Remove all native listeners for this plugin.
 | **`url`**     | <code>string</code>                         |
 
 
+#### MessageResult
+
+Event data for receiving text messages.
+
+| Prop          | Type                                        | Description                                    |
+| ------------- | ------------------------------------------- | ---------------------------------------------- |
+| **`session`** | <code><a href="#session">Session</a></code> | The session on which the message was received. |
+| **`message`** | <code>string</code>                         | The received message as an UTF-8 string.       |
+
+
+#### FileProgressResult
+
+| Prop             | Type                                                              |
+| ---------------- | ----------------------------------------------------------------- |
+| **`status`**     | <code><a href="#filetransferstatus">FileTransferStatus</a></code> |
+| **`percentage`** | <code>number</code>                                               |
+| **`uri`**        | <code>string</code>                                               |
+
+
 ### Enums
 
 
@@ -435,5 +510,15 @@ Remove all native listeners for this plugin.
 | **`NotConnected`** | <code>'notConnected'</code> |
 | **`Connecting`**   | <code>'connecting'</code>   |
 | **`Connected`**    | <code>'connected'</code>    |
+
+
+#### FileTransferStatus
+
+| Members          | Value                     |
+| ---------------- | ------------------------- |
+| **`Success`**    | <code>'success'</code>    |
+| **`InProgress`** | <code>'inProgress'</code> |
+| **`Canceled`**   | <code>'canceled'</code>   |
+| **`Failure`**    | <code>'failure'</code>    |
 
 </docgen-api>

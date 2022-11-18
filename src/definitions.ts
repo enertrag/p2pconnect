@@ -6,9 +6,27 @@ export enum SessionState {
 
   Connecting = 'connecting',
 
-  Connected  = 'connected'
+  Connected = 'connected'
 
 }
+
+export enum FileTransferStatus {
+
+  Success = 'success',
+  InProgress = 'inProgress',
+  Canceled = 'canceled',
+  Failure = 'failure',
+}
+
+export interface FileProgressResult {
+
+  status: FileTransferStatus;
+
+  percentage: number;
+
+  uri?: string;
+}
+
 
 export interface Advertiser {
 
@@ -77,13 +95,29 @@ export interface StartReceiveResult {
 }
 
 export interface Progress {
-  
+
   isFinished: boolean;
 
   isCancelled: boolean;
 
   fractionCompleted: number;
 
+}
+
+/**
+ * Event data for receiving text messages.
+ */
+export interface MessageResult {
+
+  /**
+   * The session on which the message was received.
+   */
+  session: Session;
+
+  /**
+   * The received message as an UTF-8 string.
+   */
+  message: string;
 }
 
 /**
@@ -97,7 +131,7 @@ export interface P2pConnectPlugin {
    * @returns {boolean} asdfasdf
    * @since 1.0.0
    */
-  isAvailable(): Promise<{available: boolean}>;
+  isAvailable(): Promise<{ available: boolean }>;
 
   /**
    * Starts advertising the service offered by the local device.
@@ -153,9 +187,14 @@ export interface P2pConnectPlugin {
   send(options: { session: Session, message: string }): Promise<void>;
 
   /**
+   * Sends a file to a peer in a session.
+   */
+  sendFile(options: { session: Session, url: string }): Promise<void>;
+
+  /**
    * Sends an (file or HTTP) URL to all connected devices in a session. Returns the id of the progress.
    */
-  sendResource(options: { session: Session, peer: Peer, url: string, name: string }): Promise<{id: string}>;
+  sendResource(options: { session: Session, peer: Peer, url: string, name: string }): Promise<{ id: string }>;
 
   /**
    * Get the current progress a send or receive action
@@ -204,7 +243,7 @@ export interface P2pConnectPlugin {
   /**
    * Indicates that receiving data has been started.
    */
-   addListener(
+  addListener(
     eventName: 'startReceive',
     listenerFunc: (result: StartReceiveResult) => void,
   ): Promise<PluginListenerHandle> & PluginListenerHandle;
@@ -216,6 +255,23 @@ export interface P2pConnectPlugin {
     eventName: 'receive',
     listenerFunc: (result: ReceiveResult) => void,
   ): Promise<PluginListenerHandle> & PluginListenerHandle;
+
+  /**
+   * Indicates that a text message has been received.
+   */
+  addListener(
+    eventName: 'message',
+    listenerFunc: (result: MessageResult) => void,
+  ): Promise<PluginListenerHandle> & PluginListenerHandle;
+
+  /**
+   * Indicates that a file transfer progress has been received.
+   */
+  addListener(
+    eventName: 'fileProgress',
+    listenerFunc: (result: FileProgressResult) => void,
+  ): Promise<PluginListenerHandle> & PluginListenerHandle;
+
 
   /**
    * Remove all native listeners for this plugin.
