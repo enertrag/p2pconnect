@@ -82,6 +82,7 @@ sequenceDiagram
     deactivate Plugin/Sender
 
     deactivate Sender
+    Receiver-->>Receiver: move files
     deactivate Receiver
 ```
 

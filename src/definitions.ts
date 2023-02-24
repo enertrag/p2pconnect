@@ -31,7 +31,7 @@ export interface TransferResult {
 
 }
 
-/**  */
+/** Defines the parameters of the sender to transfer files. */
 export interface SendOptions {
 
   /** 
@@ -109,7 +109,7 @@ export interface AcceptTransferRequest {
 }
 
 /**
- * asdfasdf asdfasdf
+ * The methods of the peer-to-peer interface are described below.
  */
 export interface P2pConnectPlugin {
 
