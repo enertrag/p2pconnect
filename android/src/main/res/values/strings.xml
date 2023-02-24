@@ -1,0 +1,5 @@
+<resources>
+    <string name="title_activity_send">SendActivity</string>
+    <string name="title_activity_receive">ReceiveActivity</string>
+    <string name="progress_title">🔗</string>
+</resources>

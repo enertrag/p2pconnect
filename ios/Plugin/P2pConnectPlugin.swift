@@ -27,11 +27,85 @@ public class P2pConnectPlugin: CAPPlugin {
     
     private var progress: [String:Progress] = [:]
     
+    private var receiver: Receiver!
+    private var sender: Sender!
+    
     override public func load() {
+        CAPLog.print("asdfasdf")
+        
+        receiver = Receiver(self)
+        sender = Sender(self)
     }
 
     deinit {
     }
+    
+    @objc func startReceive(_ call: CAPPluginCall) {
+        
+        let serviceId = call.getString("serviceId") ?? "default"
+        CAPLog.print("start receive called: \(serviceId)");
+        
+        receiver.start(serviceId)
+        
+        call.resolve(["success": true])
+        
+    }
+    
+    @objc func stopReceive(_ call: CAPPluginCall) {
+        
+        CAPLog.print("stop receive called");
+        
+        receiver.stop()
+        
+        call.resolve(["success": true])
+        
+    }
+    
+    @objc func send(_ call: CAPPluginCall) {
+        
+        let serviceId = call.getString("serviceId") ?? "default"
+        let transferId = call.getString("transferId") ?? "default"
+        CAPLog.print("send called: \(serviceId) -> \(transferId)");
+        
+        var descriptors: [ResourceDescriptor] = []
+        
+        let resources = call.getArray("resources", JSObject.self)!
+        
+        for resource in resources {
+         
+            let id = resource["id"] as! String
+            let uri = resource["uri"] as! String
+            
+            let url = URL(string: uri)!
+            
+            let descriptor = ResourceDescriptor(id: id, uri: url)
+            
+            descriptors.append(descriptor)
+        }
+        
+        self.bridge?.saveCall(call)
+        
+        CAPLog.print("🐇  send: \(descriptors.count) resources")
+        
+        sender.start(serviceId,
+                     transferId: transferId,
+                     resources: descriptors,
+                     callbackId: call.callbackId)
+    }
+    
+    @objc func acceptTransfer(_ call: CAPPluginCall) {
+        
+        CAPLog.print("acceptTransfer called")
+        
+        let transferId = call.getString("transferId") ?? "default"
+        let accept = call.getBool("accept") ?? false
+
+        receiver.acceptTransfer(accept, withTransferId: transferId)
+        
+        call.resolve()
+    }
+    
+    
     
     @objc func isAvailable(_ call: CAPPluginCall) {
         
@@ -205,7 +279,7 @@ public class P2pConnectPlugin: CAPPlugin {
         call.resolve()
     }
     
-    @objc func send(_ call: CAPPluginCall) {
+    @objc func send2(_ call: CAPPluginCall) {
         
         CAPLog.print("send called")
         

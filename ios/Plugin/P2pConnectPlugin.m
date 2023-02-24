@@ -11,7 +11,14 @@ CAP_PLUGIN(P2pConnectPlugin, "P2pConnect",
            CAP_PLUGIN_METHOD(stopBrowse, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(connect, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(disconnect, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(send, CAPPluginReturnPromise);
+        //   CAP_PLUGIN_METHOD(send, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(sendResource, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(getProgress, CAPPluginReturnPromise);
+           
+           CAP_PLUGIN_METHOD(startReceive, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(stopReceive, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(acceptTransfer, CAPPluginReturnPromise);
+           
+           CAP_PLUGIN_METHOD(send, CAPPluginReturnPromise);
+
 )

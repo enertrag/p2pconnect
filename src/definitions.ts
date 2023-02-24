@@ -1,123 +1,111 @@
 import type { PluginListenerHandle } from '@capacitor/core';
 
-export enum SessionState {
+/**
+ * Describes a resource to be transferred. 
+ */
+export interface ResourceDescriptor {
 
-  NotConnected = 'notConnected',
-
-  Connecting = 'connecting',
-
-  Connected = 'connected'
-
-}
-
-export enum FileTransferStatus {
-
-  Success = 'success',
-  InProgress = 'inProgress',
-  Canceled = 'canceled',
-  Failure = 'failure',
-}
-
-export interface FileProgressResult {
-
-  status: FileTransferStatus;
-
-  percentage: number;
-
-  uri?: string;
-}
-
-
-export interface Advertiser {
-
-  id: string;
-}
-
-export interface Browser {
-
-  id: string;
-}
-
-export interface Peer {
-
-  id: string;
-
-  displayName?: string;
-
-}
-
-export interface BrowseOptions {
-
-  displayName?: string;
-
-  serviceType: string;
-
-  /**
-   * Sets whether to ignore advertisements from your own device.
+  /** 
+   * An identifier for the resource. 
+   * This will be the same for sender and receiver.
    */
-  ignoreLocalDevice: boolean;
-}
-
-export interface Session {
-
   id: string;
-}
-
-export interface ConnectResult {
-
-  advertiser: Advertiser;
-
-  session: Session;
-
-}
-
-export interface SessionStateResult {
-
-  session: Session;
-
-  state: SessionState;
-}
-
-export interface ReceiveResult {
-
-  session: Session;
-
-  message: string;
-
-  url: string;
-}
-
-export interface StartReceiveResult {
-
-  session: Session;
-
-  name: string;
-}
-
-export interface Progress {
-
-  isFinished: boolean;
-
-  isCancelled: boolean;
-
-  fractionCompleted: number;
-
+  /** 
+   * The resource URI.
+   * This must be an absolute URI. It will include a schema, depending of 
+   * the target system. 
+   * The path (especially the last part) will vary between sender and receiver.
+   */
+  uri: string;
 }
 
 /**
- * Event data for receiving text messages.
+ * The result of a transmission process for the receiver.
  */
-export interface MessageResult {
+export interface TransferResult {
 
-  /**
-   * The session on which the message was received.
-   */
-  session: Session;
+  /** The ID for the transfer process. */
+  transferId: string;
+  /** The list of the transferred resources. */
+  resources: ResourceDescriptor[]
 
-  /**
-   * The received message as an UTF-8 string.
+}
+
+/**  */
+export interface SendOptions {
+
+  /** 
+   * The identifier for the P2P process.
+   * Only devices that use the same identifier can be found.  
+   * To remain compatible with iOS devices, the identifier must meet the following criteria:
+   * <ul>
+   * <li>Must be 1–15 characters long</li>
+   * <li>Can contain only ASCII lowercase letters, numbers, and hyphens</li>
+   * <li>Must contain at least one ASCII letter</li>
+   * <li>Must not begin or end with a hyphen</li>
+   * <li>Must not contain hyphens adjacent to other hyphens.</li>
+   * </ul>
    */
-  message: string;
+  serviceId: string;
+  /** The ID for the transfer process. */
+  transferId: string;
+  /** The list of the resources to be transferred. */
+  resources: ResourceDescriptor[];
+}
+
+/** Accepts or rejects a transfer. */
+export interface AcceptTransferOptions {
+
+  /** The ID for the transfer process. */
+  transferId: string
+  /** <code>true<code> to accept the transfer, <code>fale</code> otherwise. */
+  accept: boolean
+}
+
+/** Defines the parameters for receiving a transfer. */
+export interface ReceiveOptions {
+  /** 
+    * The identifier for the P2P process.
+    * Only devices that use the same identifier can be found.  
+    * To remain compatible with iOS devices, the identifier must meet the following criteria:
+    * <ul>
+    * <li>Must be 1–15 characters long</li>
+    * <li>Can contain only ASCII lowercase letters, numbers, and hyphens</li>
+    * <li>Must contain at least one ASCII letter</li>
+    * <li>Must not begin or end with a hyphen</li>
+    * <li>Must not contain hyphens adjacent to other hyphens.</li>
+    * </ul>
+    */
+  serviceId: string;
+}
+
+/**
+ * Describes the possible error sources of the send operation.
+ */
+export enum SendError {
+
+  /** The transfer was interrupted by either sender or receiver. */
+  transferInterrupted = 'transferInterrupted',
+  /** The plugin version differs between sender and receiver. */
+  versionMismatch = 'versionMismatch',
+  /** The recipient has refused to receive the transfer. */
+  transferDenied = 'transferDenied',
+  /** The sending process was cancelled. */
+  cancelled = 'cancelled',
+  /** The user has not granted the requested permissions. */
+  permissionDenied = 'permissionDenied',
+  /** An internal error occured. Something went terribly wrong. */
+  internalError = 'internalError'
+}
+
+/**
+ * Describes a request to the recipient to confirm 
+ * or decline acceptance of the transfer. 
+ */
+export interface AcceptTransferRequest {
+
+  /** The ID of the transfer whose status is to be confirmed. */
+  transferId: string;
 }
 
 /**
@@ -133,145 +121,6 @@ export interface P2pConnectPlugin {
    */
   isAvailable(): Promise<{ available: boolean }>;
 
-  /**
-   * Starts advertising the service offered by the local device.
-   * 
-   * @param options {{displayName?: string, serviceType: string}} 
-   *        displayName The name under which the device is to be displayed. If no value is passed, the device name is used.
-   * 
-   *        serviceType must be a unique identifier. The maximum length is 15 characters. Valid characters are letters, numbers and dashes.
-   */
-  startAdvertise(options: { displayName?: string, serviceType: string }): Promise<Advertiser>;
-
-  /**
-   * Stops the advertising.
-   * 
-   * @param options {Advertiser} the advertiser to be stopped
-   */
-  stopAdvertise(options: { advertiser: Advertiser }): Promise<void>;
-
-  /**
-   * Starts the search for nearby devices that offer the specified service.
-   * 
-   * @param options 
-   */
-  startBrowse(options: BrowseOptions): Promise<Browser>
-
-  /**
-   * Stops searching for nearby devices.
-   * 
-   * After this method call, no more connections to found devices can be established.
-   * 
-   * @param options 
-   */
-  stopBrowse(options: { browser: Browser }): Promise<void>;
-
-  /**
-   * Connects to a nearby device.
-   * 
-   * @param options 
-   * 
-   */
-  connect(options: { browser: Browser, peer: Peer }): Promise<Session>;
-
-  /**
-   * Disconnects from a nearby device.
-   * 
-   * @param options 
-   */
-  disconnect(options: { session: Session }): Promise<void>;
-
-  /**
-   * Sends a message to all connected devices in a session.
-   */
-  send(options: { session: Session, message: string }): Promise<void>;
-
-  /**
-   * Sends a file to a peer in a session.
-   */
-  sendFile(options: { session: Session, url: string }): Promise<void>;
-
-  /**
-   * Sends an (file or HTTP) URL to all connected devices in a session. Returns the id of the progress.
-   */
-  sendResource(options: { session: Session, peer: Peer, url: string, name: string }): Promise<{ id: string }>;
-
-  /**
-   * Get the current progress a send or receive action
-   * @param options 
-   */
-  getProgress(options: { id: string }): Promise<Progress>;
-
-  /**
-   * Indicates that a new device has been found nearby.
-   * 
-   * @since 1.0.0
-   */
-  addListener(
-    eventName: 'peerFound',
-    listenerFunc: (peer: Peer) => void,
-  ): Promise<PluginListenerHandle> & PluginListenerHandle;
-
-  /**
-   * Indicates that a nearby device is no longer available.
-   * 
-   * @android: the peer name is always null
-   * 
-   */
-  addListener(
-    eventName: 'peerLost',
-    listenerFunc: (peer: Peer) => void,
-  ): Promise<PluginListenerHandle> & PluginListenerHandle;
-
-  /**
-   * Indicated that the advertised device has been connected.
-   */
-  addListener(
-    eventName: 'connect',
-    listenerFunc: (result: ConnectResult) => void,
-  ): Promise<PluginListenerHandle> & PluginListenerHandle;
-
-  /**
-   * Indicates that the state of the connection has changed.
-   * 
-   */
-  addListener(
-    eventName: 'sessionStateChange',
-    listenerFunc: (result: SessionStateResult) => void,
-  ): Promise<PluginListenerHandle> & PluginListenerHandle;
-
-  /**
-   * Indicates that receiving data has been started.
-   */
-  addListener(
-    eventName: 'startReceive',
-    listenerFunc: (result: StartReceiveResult) => void,
-  ): Promise<PluginListenerHandle> & PluginListenerHandle;
-
-  /**
-   * Indicates that a message or url has been received.
-   */
-  addListener(
-    eventName: 'receive',
-    listenerFunc: (result: ReceiveResult) => void,
-  ): Promise<PluginListenerHandle> & PluginListenerHandle;
-
-  /**
-   * Indicates that a text message has been received.
-   */
-  addListener(
-    eventName: 'message',
-    listenerFunc: (result: MessageResult) => void,
-  ): Promise<PluginListenerHandle> & PluginListenerHandle;
-
-  /**
-   * Indicates that a file transfer progress has been received.
-   */
-  addListener(
-    eventName: 'fileProgress',
-    listenerFunc: (result: FileProgressResult) => void,
-  ): Promise<PluginListenerHandle> & PluginListenerHandle;
-
 
   /**
    * Remove all native listeners for this plugin.
@@ -279,4 +128,37 @@ export interface P2pConnectPlugin {
    * @since 1.0.0
    */
   removeAllListeners(): Promise<void>;
+
+  /**
+   * The notification is triggered on the recipient's side when a new transfer 
+   * is received that needs to be confirmed.
+   */
+  addListener(
+    eventName: 'acceptTransfer',
+    listenerFunc: (request: AcceptTransferRequest) => void
+  ): Promise<PluginListenerHandle> & PluginListenerHandle;
+
+  /**
+   * Notification is triggered on the recipient's side 
+   * when a transfer is complete.
+   */
+  addListener(
+    eventName: 'transferComplete',
+    listenerFunc: (result: TransferResult) => void
+  ): Promise<PluginListenerHandle> & PluginListenerHandle;
+
+  /** Starts a transfer on the sender's side. */
+  send(options: SendOptions): Promise<{ success: boolean, error: SendError | null }>;
+
+  /** Activates the reception of a transfer on the recipient's side. */
+  startReceive(options: ReceiveOptions): Promise<{ success: boolean }>;
+  /** Cancels the reception on the receiver's side. */
+  stopReceive(): Promise<{ success: boolean }>;
+
+  /**
+   * Must be called in response to the 'acceptTransfer' 
+   * notification and determines on the recipient's side whether the 
+   * transfer should be accepted or rejected.
+   */
+  acceptTransfer(options: AcceptTransferOptions): Promise<void>;
 }

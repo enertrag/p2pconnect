@@ -1,10 +1,11 @@
 package energy.py.p2pconnect;
 
 import android.Manifest;
-import android.net.wifi.p2p.WifiP2pDevice;
+import android.content.Intent;
 import android.provider.Settings;
 import android.util.Log;
 
+import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PermissionState;
 import com.getcapacitor.Plugin;
@@ -14,9 +15,13 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 @CapacitorPlugin(
@@ -54,219 +59,222 @@ import java.util.UUID;
 })
 public class P2pConnect extends Plugin {
 
-    public static String TAG = "P2pConnectPlugin";
+    public static String TAG = "P2PConnect/Plugin";
 
-    private IP2pConnect implementation;
+    public static final int PROTOCOL_VERSION = 1;
 
-    public static final String PEER_FOUND_EVENT = "peerFound";
-    public static final String PEER_LOST_EVENT = "peerLost";
-    public static final String CONNECT_EVENT = "connect";
-    public static final String SESSION_STATE_CHANGE_EVENT = "sessionStateChange";
-    public static final String START_RECEIVE_EVENT = "startReceive";
-    public static final String RECEIVE_EVENT = "receive";
-    public static final String MESSAGE_EVENT = "message";
-    public static final String FILE_PROGRESS_EVENT = "fileProgress";
+    public static final String ACCEPT_TRANSFER = "acceptTransfer";
+    public static final String TRANSFER_COMPLETE = "transferComplete";
 
     private String _lastDisplayName = null; //Settings.Global.getString(getContext().getContentResolver(), "device_name");
 
     @Override
     public void load() {
         Log.i(TAG, "load()");
-        implementation = new P2pConnectNearbyImpl(this);
-
-
-
-        implementation.initialize();
     }
 
     @PluginMethod
     public void isAvailable(PluginCall call) {
         JSObject ret = new JSObject();
-        ret.put("available", implementation.isAvailable());
-        call.resolve(ret);
-    }
-
-    @PluginMethod
-    public void startAdvertise(PluginCall call) {
-
-        if (!allPermissionsGranted()) {
-            requestAllPermissions(call, "completeStartAdvertising");
-        } else {
-            completeStartAdvertising(call);
-        }
-    }
-
-    @PermissionCallback
-    private void completeStartAdvertising(PluginCall call) {
-        if (allPermissionsGranted()) {
-
-            String serviceId = call.getString("serviceType");
-            String displayName = call.getString("displayName");
-
-            if(displayName == null) {
-                displayName = Settings.Global.getString(getContext().getContentResolver(), "device_name");
-            }
-
-            implementation.startAdvertise(displayName, serviceId);
-            JSObject ret = new JSObject();
-            call.resolve(ret);
-        } else {
-            call.reject("Location permission was denied");
-        }
-    }
-
-    @PluginMethod
-    public void stopAdvertise(PluginCall call) {
-        implementation.endAdvertise();
-        JSObject ret = new JSObject();
-        call.resolve(ret);
-    }
-
-    @PluginMethod
-    public void startBrowse(PluginCall call) {
-
-        if (!allPermissionsGranted()) {
-            requestAllPermissions(call, "completeStartBrowsing");
-        } else {
-            completeStartBrowsing(call);
-        }
-    }
-
-    @PermissionCallback
-    private void completeStartBrowsing(PluginCall call) {
-        if (allPermissionsGranted()) {
-
-            String serviceId = call.getString("serviceType");
-            String displayName = call.getString("displayName");
-
-            if(displayName == null) {
-                displayName = Settings.Global.getString(getContext().getContentResolver(), "device_name");
-            }
-            // A little bit "hacky" at this point: We remember the name of the searching device because we need it again when we connect.
-            _lastDisplayName = displayName;
-
-            implementation.startDiscover(displayName, serviceId);
-
-            JSObject ret = new JSObject();
-            ret.put("id", "abc123");
-            call.resolve(ret);
-        } else {
-            call.reject("Location permission was denied");
-        }
-    }
-
-    @PluginMethod
-    public void stopBrowse(PluginCall call) {
-
-        implementation.endDiscover();
-
-        JSObject ret = new JSObject();
-        call.resolve(ret);
-
-        //        call.reject("Error stopping peer discovery. Code " + code);
-    }
-
-    @PluginMethod
-    public void connect(PluginCall call) {
-
-        JSObject peer = call.getObject("peer");
-        String deviceAddress = peer.getString("id");
-
-        Log.d("connect", peer.toString());
-        Log.d("connect", deviceAddress);
-
-        implementation.connect(deviceAddress, /* see above */_lastDisplayName,
-            (String peerId) -> {
-                JSObject ret = new JSObject();
-                ret.put("id", peerId);
-                call.resolve(ret);
-            },
-            (Exception e) -> {
-                call.reject("Error connecting to peer");
-            });
-    }
-
-    @PluginMethod
-    public void disconnect(PluginCall call) {
-
-        JSObject peer = call.getObject("session");
-        String deviceAddress = peer.getString("id");
-
-        implementation.disconnect(deviceAddress);
-
-        JSObject ret = new JSObject();
+        ret.put("available", true);
         call.resolve(ret);
     }
 
     @PluginMethod
     public void send(PluginCall call) {
 
-        JSObject session = call.getObject("session");
-        String peerId = session.getString("id");
+        if(!allPermissionsGranted()) {
+            requestAllPermissions(call, "completeSend");
 
-        String message = call.getString("message");
-
-        implementation.sendMessage(peerId, message);
-
-        JSObject ret = new JSObject();
-        call.resolve(ret);
+        } else {
+            completeSend(call);
+        }
     }
 
     @PluginMethod
-    public void sendFile(PluginCall call) {
+    public void startReceive(PluginCall call) {
 
-        JSObject session = call.getObject("session");
-        String endpointId = session.getString("id");
+        if(!allPermissionsGranted()) {
+            requestAllPermissions(call, "completeStartReceive");
 
-        String url = call.getString("url");
-
-        try {
-            implementation.sendFile(endpointId, url);
+        } else {
+            completeStartReceive(call);
         }
-        catch(FileNotFoundException ex) {
+    }
 
-            Log.e(TAG, "sendFile(): failed", ex);
+    @PluginMethod
+    public void stopReceive(PluginCall call) {
 
-            call.reject("fileNotFound");
+        if(!allPermissionsGranted()) {
+            requestAllPermissions(call, "completeStopReceive");
+
+        } else {
+            completeStopReceive(call);
+        }
+    }
+
+    @PluginMethod
+    public void acceptTransfer(PluginCall call) {
+
+        String transferId = call.getString("transferId");
+        if(transferId == null) {
+
+            Log.e(TAG, "Missing transferId");
+            call.reject("missing transferId");
             return;
         }
 
-        JSObject ret = new JSObject();
-        call.resolve(ret);
+        boolean accept = call.getBoolean("accept", false);
+        boolean result = Receiver.getInstance().acceptTransfer(getContext(), transferId, accept);
+
+        if (result) {
+            call.resolve();
+        } else {
+            call.reject("invalid transferId");
+        }
     }
 
-    @PluginMethod
-    public void sendResource(PluginCall call) {
+    @PermissionCallback
+    private void completeSend(PluginCall call) {
 
-        String url = call.getString("url");
-        JSObject peer = call.getObject("peer");
-        String groupOwnerHostAddress = peer.getString("id");
-        String guid = call.getString("name");
+        if(allPermissionsGranted()) {
 
-        Log.d("sendResource", url);
-        Log.d("sendResource", peer.toString());
-        Log.d("groupOwnerHostAddress", groupOwnerHostAddress);
-        Log.d("name", guid);
+            String serviceId = call.getString("serviceId");
+            if(serviceId == null) {
 
-      //  implementation.sendResource(url, guid, groupOwnerHostAddress);
+                Log.e(TAG, "Missing serviceId");
+                call.reject("missing serviceId");
+                return;
+            }
 
-        JSObject ret = new JSObject();
-        ret.put("id", guid);
-        call.resolve(ret);
+            String transferId = call.getString("transferId");
+            if(transferId == null) {
+
+                Log.e(TAG, "Missing transferId");
+                call.reject("missing transferId");
+                return;
+            }
+
+            List<ResourceDescriptor> resourceDescriptors = new ArrayList<ResourceDescriptor>();
+
+            JSArray resources = call.getArray("resources");
+            if(resources == null) {
+
+                Log.e(TAG, "Missing resources");
+                call.reject("missing resources");
+                return;
+            }
+
+            try {
+                for (int i = 0; i < resources.length(); i++) {
+
+                    JSONObject resource = resources.getJSONObject(i);
+                    String id = resource.getString("id");
+                    String uri = resource.getString("uri");
+
+                    Log.d(TAG, "ResourceDescriptor[" + i +"] " + id + " = " + uri);
+
+                    resourceDescriptors.add(new ResourceDescriptor(id, uri));
+                }
+            } catch(JSONException ex) {
+
+                Log.e(TAG, "Failed converting input data", ex);
+
+                call.reject("invalid resource descriptor");
+                return;
+            }
+
+            Log.d(TAG, "Calling startBrowse with serviceId " + serviceId);
+            getBridge().saveCall(call);
+            Sender.getInstance().startBrowse(getContext(), serviceId, transferId, resourceDescriptors, () -> getBridge().getSavedCall(call.getCallbackId()));
+
+        } else {
+
+            JSObject result = new JSObject();
+            result.put("success", false);
+            result.put("error", "permissionDenied");
+            call.resolve(result);
+        }
     }
 
-    @PluginMethod
-    public void getProgress(PluginCall call) {
+    @PermissionCallback
+    private void completeStartReceive(PluginCall call) {
 
-        String id = call.getString("id");
+        if(allPermissionsGranted()) {
 
-        boolean finished = false; // implementation.isTransferFinished(id);
+            String serviceId = call.getString("serviceId");
+            if(serviceId == null) {
 
-        JSObject ret = new JSObject();
-        ret.put("isFinished", finished);
-        ret.put("isCancelled", false);
-        ret.put("fractionCompleted", false);
-        call.resolve(ret);
+                Log.e(TAG, "Missing serviceId");
+                call.reject("missing serviceId");
+                return;
+            }
+
+            Log.d(TAG, "Calling startAdvertise with serviceId " + serviceId);
+            Receiver.getInstance().startAdvertise(getContext(), serviceId, transferId -> {
+
+                // accept transfer
+
+                if (transferId == null) return;
+
+                JSObject message = new JSObject();
+                message.put("transferId", transferId);
+
+                notifyListeners(ACCEPT_TRANSFER, message);
+
+            }, (transferId, resources) -> {
+
+                // transfer complete
+
+                JSObject message = new JSObject();
+                message.put("transferId", transferId);
+
+                JSArray list = new JSArray();
+
+                for(int i = 0; i < resources.size(); i++) {
+
+                    ResourceDescriptor d = resources.get(i);
+
+                    JSObject resource = new JSObject();
+                    resource.put("id", d.getId());
+                    resource.put("uri", d.getUri());
+
+                    list.put(resource);
+                }
+                message.put("resources", list);
+
+                notifyListeners(TRANSFER_COMPLETE, message);
+            });
+
+            JSObject result = new JSObject();
+            result.put("success", true);
+            call.resolve(result);
+
+        } else {
+
+            JSObject result = new JSObject();
+            result.put("success", false);
+            call.resolve(result);
+        }
+    }
+
+    @PermissionCallback
+    private void completeStopReceive(PluginCall call) {
+
+        if(allPermissionsGranted()) {
+
+            Log.d(TAG, "Calling endAdvertise()");
+            Receiver.getInstance().endAdvertise(getContext());
+            JSObject result = new JSObject();
+            result.put("success", true);
+            call.resolve(result);
+
+        } else {
+
+            JSObject result = new JSObject();
+            result.put("success", false);
+            call.resolve(result);
+        }
     }
 
     private boolean allPermissionsGranted() {
@@ -277,134 +285,4 @@ public class P2pConnect extends Plugin {
             getPermissionState("file") == PermissionState.GRANTED;
     }
 
-    public void notifyMessage(String peerId, String message)  {
-
-        notifyListeners(MESSAGE_EVENT, createBrowserObjectForMessage(peerId, message));
-    }
-
-    public void notifyPeerFound(Peer peer) {
-        if (peer == null) return;
-
-        notifyListeners(PEER_FOUND_EVENT, createBrowserObjectFromDevice(peer));
-    }
-
-    public void notifyPeerLost(Peer peer) {
-        if (peer == null) return;
-
-        notifyListeners(PEER_LOST_EVENT, createBrowserObjectFromDevice(peer));
-    }
-
-    public void notifyStartReceive() {
-        notifyListeners(START_RECEIVE_EVENT, createStartReceiveResult());
-    }
-
-    public void notifyReceive(String url) {
-        notifyListeners(RECEIVE_EVENT, createReceiveEvent(url));
-    }
-
-    public void notifyConnect(String groupOwnerAddress) {
-        notifyListeners(CONNECT_EVENT, createConnectEvent(groupOwnerAddress));
-    }
-
-    public void notifySessionStateChanged(String state, String peerId) {
-        notifyListeners(SESSION_STATE_CHANGE_EVENT, createSessionStateEvent(state, peerId));
-    }
-
-    public void notifyFileProgress(TransferState state, int percentage, String uri) {
-        notifyListeners(FILE_PROGRESS_EVENT, createFileProgress(state, percentage, uri));
-    }
-
-    private JSObject createBrowserObjectForMessage(String peerId, String message) {
-
-        JSObject result = new JSObject();
-        result.put("message", message);
-
-        JSObject session = new JSObject();
-        session.put("id", peerId);
-
-        result.put("session", session);
-
-        return result;
-    }
-
-    private JSObject createFileProgress(TransferState state, int percentage, String uri) {
-
-        JSObject result = new JSObject();
-
-        String v = "unknown";
-        switch(state) {
-            case Success:
-                v = "success";
-                break;
-            case InProgress:
-                v = "inProgress";
-                break;
-            case Canceled:
-                v = "canceled";
-                break;
-            case Failure:
-                v = "failure";
-                break;
-        }
-
-        result.put("status", v);
-        result.put("percentage", percentage);
-        result.put("uri", uri);
-
-        return result;
-    }
-
-
-    private JSObject createSessionStateEvent(String state, String peerId) {
-        JSObject session = new JSObject();
-        session.put("id", peerId);
-
-        JSObject sessionState = new JSObject();
-        sessionState.put("session", session);
-        sessionState.put("state", state);
-
-        return sessionState;
-    }
-
-
-    private JSObject createConnectEvent(String groupOwnerAddress) {
-        JSObject session = new JSObject();
-        session.put("id", groupOwnerAddress);
-
-        JSObject advertiser = new JSObject();
-        advertiser.put("id", "");
-
-        JSObject ret = new JSObject();
-        ret.put("session", session);
-        ret.put("advertiser", advertiser);
-        return ret;
-    }
-
-    private JSObject createReceiveEvent(String url) {
-        JSObject session = new JSObject();
-        session.put("id", "");
-
-        JSObject ret = new JSObject();
-        ret.put("session", session);
-        ret.put("message", "");
-        ret.put("url", url);
-        return ret;
-    }
-
-    private JSObject createStartReceiveResult() {
-        JSObject session = new JSObject();
-        session.put("id", "");
-
-        JSObject ret = new JSObject();
-        ret.put("session", session);
-        ret.put("name", UUID.randomUUID().toString());
-        return ret;
-    }
-
-    private JSObject createBrowserObjectFromDevice(Peer device) {
-        JSObject ret = new JSObject();
-        ret.put("id", device.id);
-        ret.put("displayName", device.name);
-        return ret;
-    }
 }
