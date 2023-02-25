@@ -13,6 +13,98 @@ npm install @enertrag/p2pconnect
 npx cap sync
 ```
 
+## Examples
+
+### Send
+
+```typescript
+// use Capacitor Filesystem plugin to get file uri
+const fileUri = await Filesystem.getUri({
+  directory: Directory.Data,
+  path: 'foo/bar/example.json',
+});
+
+// define ids
+const serviceId = 'p2p-test';
+const transferId = 'share.json';
+
+// creating resource descriptor
+const resource: ResourceDescriptor = {
+  id: 'example.json', // we use the filename here
+  uri: fileUri,
+};
+
+// call plugin: method will return after the resource was
+// sent to client or the user cancelled the process.
+const result = await P2pConnect.send({
+  serviceId,
+  transferId,
+  resources: [resource],
+});
+```
+
+### Retrieve
+
+```typescript
+// on completion a callback will be called
+P2pConnect.addListener('transferComplete', async result => {
+  // We only handle a single file here.
+  // It is also valid to send multiple files.
+  // They always arrive in the same order in
+  // which they were sent.
+  const resource = result.resources[0];
+
+  // The resource uri is a random temp file.
+  // Especially the file name differs from the sender!
+
+  // We use the resource id as the filename
+  const fileTargetPath = '/target/foobar/' + resource.id;
+
+  // We move(!) the file to the final target,
+  // for we are responsible for cleaning up the temp file.
+  await Filesystem.rename({
+    from: resource.uri,
+    toDirectory: Directory.Data,
+    to: fileTargetPath,
+  });
+});
+
+// must be equal for sender and receiver,
+// otherwise the devices can't see each other
+const serviceId = 'p2p-test';
+
+// the method returns immediatly,
+// we must call stopReceive() to stop accepting connections.
+const result = await P2pConnect.startReceive({
+  serviceId,
+});
+```
+
+### Accepting transfer (receiver)
+
+```typescript
+// register callback
+P2pConnect.addListener('acceptTransfer', request => {
+  const transferId: string = request.transferId;
+  let result = false;
+
+  if (transferId.startsWith('share.')) {
+    // decide on the basis of the data provided
+    // result = customCheck();
+
+    result = true;
+  }
+
+  // The method must be executed within 30 seconds,
+  // otherwise the process terminates.
+  // The sender is blocked during this time.
+  P2pConnect.acceptTransfer({
+    transferId,
+    accept: result,
+  });
+});
+```
+
 ## Sequence
 
 The following flowchart describes the communication between sender and receiver.
@@ -59,7 +151,6 @@ sequenceDiagram
     deactivate Receiver
     activate Plugin/Receiver
 
-
     Plugin/Receiver->>Plugin/Sender: accept transfer
     activate Plugin/Sender
 
@@ -71,10 +162,10 @@ sequenceDiagram
     activate Plugin/Receiver
     Plugin/Sender->>Plugin/Sender: send
     Plugin/Sender-->>Sender: done (iOS)
+    activate Receiver
+    Plugin/Receiver->>Receiver: transfer complete
     deactivate Plugin/Sender
 
-    Plugin/Receiver->>Receiver: transfer complete
-    activate Receiver
     Plugin/Receiver-->>Plugin/Sender: ok (android)
     activate Plugin/Sender
     deactivate Plugin/Receiver
@@ -90,23 +181,23 @@ sequenceDiagram
 
 <docgen-index>
 
-- [`isAvailable()`](#isavailable)
-- [`removeAllListeners()`](#removealllisteners)
-- [`addListener(...)`](#addlistener)
-- [`addListener(...)`](#addlistener)
-- [`send(...)`](#send)
-- [`startReceive(...)`](#startreceive)
-- [`stopReceive()`](#stopreceive)
-- [`acceptTransfer(...)`](#accepttransfer)
-- [Interfaces](#interfaces)
-- [Enums](#enums)
+* [`isAvailable()`](#isavailable)
+* [`removeAllListeners()`](#removealllisteners)
+* [`addListener(...)`](#addlistener)
+* [`addListener(...)`](#addlistener)
+* [`send(...)`](#send)
+* [`startReceive(...)`](#startreceive)
+* [`stopReceive()`](#stopreceive)
+* [`acceptTransfer(...)`](#accepttransfer)
+* [Interfaces](#interfaces)
+* [Enums](#enums)
 
 </docgen-index>
 
 <docgen-api>
 <!--Update the source file JSDoc comments and rerun docgen to update the docs below-->
 
-asdfasdf asdfasdf
+The methods of the peer-to-peer interface are described below.
 
 ### isAvailable()
 
@@ -120,7 +211,8 @@ Indicates whether the Peer to Peer function is available on the device.
 
 **Since:** 1.0.0
 
----
+--------------------
+
 
 ### removeAllListeners()
 
@@ -134,7 +226,8 @@ Remove all native listeners for this plugin.
 
 **Since:** 1.0.0
 
----
+--------------------
+
 
 ### addListener(...)
 
@@ -142,7 +235,7 @@ Remove all native listeners for this plugin.
 addListener(eventName: 'acceptTransfer', listenerFunc: (request: AcceptTransferRequest) => void) => Promise<PluginListenerHandle> & PluginListenerHandle
 ```
 
-The notification is triggered on the recipient's side when a new transfer
+The notification is triggered on the recipient's side when a new transfer 
 is received that needs to be confirmed.
 
 | Param              | Type                                                                                          |
@@ -152,7 +245,8 @@ is received that needs to be confirmed.
 
 **Returns:** <code>any</code>
 
----
+--------------------
+
 
 ### addListener(...)
 
@@ -160,7 +254,7 @@ is received that needs to be confirmed.
 addListener(eventName: 'transferComplete', listenerFunc: (result: TransferResult) => void) => Promise<PluginListenerHandle> & PluginListenerHandle
 ```
 
-Notification is triggered on the recipient's side
+Notification is triggered on the recipient's side 
 when a transfer is complete.
 
 | Param              | Type                                                                           |
@@ -170,7 +264,8 @@ when a transfer is complete.
 
 **Returns:** <code>any</code>
 
----
+--------------------
+
 
 ### send(...)
 
@@ -186,7 +281,8 @@ Starts a transfer on the sender's side.
 
 **Returns:** <code>any</code>
 
----
+--------------------
+
 
 ### startReceive(...)
 
@@ -202,7 +298,8 @@ Activates the reception of a transfer on the recipient's side.
 
 **Returns:** <code>any</code>
 
----
+--------------------
+
 
 ### stopReceive()
 
@@ -214,7 +311,8 @@ Cancels the reception on the receiver's side.
 
 **Returns:** <code>any</code>
 
----
+--------------------
+
 
 ### acceptTransfer(...)
 
@@ -222,8 +320,8 @@ Cancels the reception on the receiver's side.
 acceptTransfer(options: AcceptTransferOptions) => any
 ```
 
-Must be called in response to the 'acceptTransfer'
-notification and determines on the recipient's side whether the
+Must be called in response to the 'acceptTransfer' 
+notification and determines on the recipient's side whether the 
 transfer should be accepted or rejected.
 
 | Param         | Type                                                                    |
@@ -232,24 +330,28 @@ transfer should be accepted or rejected.
 
 **Returns:** <code>any</code>
 
----
+--------------------
+
 
 ### Interfaces
 
+
 #### AcceptTransferRequest
 
-Describes a request to the recipient to confirm
+Describes a request to the recipient to confirm 
 or decline acceptance of the transfer.
 
 | Prop             | Type                | Description                                             |
 | ---------------- | ------------------- | ------------------------------------------------------- |
 | **`transferId`** | <code>string</code> | The ID of the transfer whose status is to be confirmed. |
 
+
 #### PluginListenerHandle
 
 | Prop         | Type                      |
 | ------------ | ------------------------- |
 | **`remove`** | <code>() =&gt; any</code> |
+
 
 #### TransferResult
 
@@ -260,6 +362,7 @@ The result of a transmission process for the receiver.
 | **`transferId`** | <code>string</code> | The ID for the transfer process.       |
 | **`resources`**  | <code>{}</code>     | The list of the transferred resources. |
 
+
 #### ResourceDescriptor
 
 Describes a resource to be transferred.
@@ -269,13 +372,17 @@ Describes a resource to be transferred.
 | **`id`**  | <code>string</code> | An identifier for the resource. This will be the same for sender and receiver.                                                                                                       |
 | **`uri`** | <code>string</code> | The resource URI. This must be an absolute URI. It will include a schema, depending of the target system. The path (especially the last part) will vary between sender and receiver. |
 
+
 #### SendOptions
+
+Defines the parameters of the sender to transfer files.
 
 | Prop             | Type                | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ---------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`serviceId`**  | <code>string</code> | The identifier for the P2P process. Only devices that use the same identifier can be found. To remain compatible with iOS devices, the identifier must meet the following criteria: &lt;ul&gt; &lt;li&gt;Must be 1–15 characters long&lt;/li&gt; &lt;li&gt;Can contain only ASCII lowercase letters, numbers, and hyphens&lt;/li&gt; &lt;li&gt;Must contain at least one ASCII letter&lt;/li&gt; &lt;li&gt;Must not begin or end with a hyphen&lt;/li&gt; &lt;li&gt;Must not contain hyphens adjacent to other hyphens.&lt;/li&gt; &lt;/ul&gt; |
 | **`transferId`** | <code>string</code> | The ID for the transfer process.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | **`resources`**  | <code>{}</code>     | The list of the resources to be transferred.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+
 
 #### ReceiveOptions
 
@@ -284,6 +391,7 @@ Defines the parameters for receiving a transfer.
 | Prop            | Type                | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | --------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`serviceId`** | <code>string</code> | The identifier for the P2P process. Only devices that use the same identifier can be found. To remain compatible with iOS devices, the identifier must meet the following criteria: &lt;ul&gt; &lt;li&gt;Must be 1–15 characters long&lt;/li&gt; &lt;li&gt;Can contain only ASCII lowercase letters, numbers, and hyphens&lt;/li&gt; &lt;li&gt;Must contain at least one ASCII letter&lt;/li&gt; &lt;li&gt;Must not begin or end with a hyphen&lt;/li&gt; &lt;li&gt;Must not contain hyphens adjacent to other hyphens.&lt;/li&gt; &lt;/ul&gt; |
+
 
 #### AcceptTransferOptions
 
@@ -294,7 +402,9 @@ Accepts or rejects a transfer.
 | **`transferId`** | <code>string</code>  | The ID for the transfer process.                                                              |
 | **`accept`**     | <code>boolean</code> | &lt;code&gt;true&lt;code&gt; to accept the transfer, &lt;code&gt;fale&lt;/code&gt; otherwise. |
 
+
 ### Enums
+
 
 #### SendError
 
