@@ -343,8 +343,16 @@ public class Receiver implements ProgressCallback {
                         updateProgress("", 100);
 
                         if (_currentReceivingResource >= _numberOfResourcesToReceive - 1) {
+
+                            Log.i(TAG, "Sending success message to sender");
+                            // Inform the sender about success of the transfer
+                            sendMessage(_context, endpointId, "all.done");
+
                             finishCall(_context, endpointId);
                         }
+
+                        // Current payload is (d/g)one
+                        _currentPayload = null;
 
                         break;
 

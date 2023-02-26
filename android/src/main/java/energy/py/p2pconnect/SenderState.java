@@ -21,6 +21,16 @@ public enum SenderState {
     /** Connected: Sent ids of resources and waiting for answer */
     WAITING_FOR_ID,
     /** Connected: Sending resources */
-    TRANSFERRING_RESOURCES
+    TRANSFERRING_RESOURCES,
+    /**
+     * Done: waiting for receiver to commit.
+     *
+     * I observed an error when the transmitter
+     * disconnected right after the transmission was completed.
+     * In this case, the transmission hung at 99% at
+     * the receiver and was not completed.
+     */
+    WAITING_FOR_RECEIVER
+
 
 }

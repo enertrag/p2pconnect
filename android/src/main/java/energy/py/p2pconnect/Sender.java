@@ -186,6 +186,20 @@ public class Sender {
 
                         break;
 
+                    case WAITING_FOR_RECEIVER:
+
+                        if (message.equals("all.done")) {
+
+                            Log.i(TAG, "Received commit from receiver");
+                            finish(_context, this, endpointId);
+
+                        } else {
+
+                            failCall(endpointId, "internalError");
+                        }
+
+                        break;
+
                     default:
 
                         // Invalid internal state
@@ -245,6 +259,21 @@ public class Sender {
         }
     }
 
+    private void finish(Context context, ProgressCallback callback, String endpoint) {
+
+        // Finish
+        _state = SenderState.NONE;
+
+        Log.i(TAG, "Process completed");
+        callback.updateProgress(null, -1);
+
+        Nearby.getConnectionsClient(context).disconnectFromEndpoint(endpoint);
+
+        JSObject result = new JSObject();
+        result.put("success", true);
+        _callResolver.getCall().resolve(result);
+    }
+
     private void sendNextResource(Context context, String endpoint, ProgressCallback callback) throws FileNotFoundException {
 
         _currentResourceIndex++;
@@ -253,17 +282,10 @@ public class Sender {
         if(_currentResourceIndex >= _currentResources.size()) {
 
             Log.i(TAG, "Nothing left to do for index " + _currentResourceIndex);
-            // Finish
-            _state = SenderState.NONE;
+            Log.d(TAG, "Waiting for the receiver to commit");
 
-            Log.i(TAG, "Transfer completed");
-            callback.updateProgress(null, -1);
-
-            Nearby.getConnectionsClient(context).disconnectFromEndpoint(endpoint);
-
-            JSObject result = new JSObject();
-            result.put("success", true);
-            _callResolver.getCall().resolve(result);
+            callback.updateProgress("⏳", 0);
+            _state = SenderState.WAITING_FOR_RECEIVER;
 
             return;
         }

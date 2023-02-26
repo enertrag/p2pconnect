@@ -11,7 +11,8 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginLeft="10sp"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:textSize="16sp" />
 
     <Button
         android:id="@+id/message_button"
@@ -19,7 +20,8 @@
         android:layout_height="wrap_content"
         android:paddingLeft="16dp"
         android:paddingRight="16dp"
-        android:textSize="10sp"
-        />
+        android:layout_marginRight="10sp"
+        android:text="@string/button_send"
+        android:textSize="12sp" />
 
 </LinearLayout>
