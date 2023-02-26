@@ -5,15 +5,6 @@
 // each method the plugin supports using the CAP_PLUGIN_METHOD macro.
 CAP_PLUGIN(P2pConnectPlugin, "P2pConnect",
            CAP_PLUGIN_METHOD(isAvailable, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(startAdvertise, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(stopAdvertise, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(startBrowse, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(stopBrowse, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(connect, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(disconnect, CAPPluginReturnPromise);
-        //   CAP_PLUGIN_METHOD(send, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(sendResource, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(getProgress, CAPPluginReturnPromise);
            
            CAP_PLUGIN_METHOD(startReceive, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(stopReceive, CAPPluginReturnPromise);
