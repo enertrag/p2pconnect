@@ -17,10 +17,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/softyde/p2pconnect.git"
+    "url": "git+https://github.com/enertrag/p2pconnect.git"
   },
   "bugs": {
-    "url": "https://github.com/softyde/p2pconnect/issues"
+    "url": "https://github.com/enertrag/p2pconnect/issues"
   },
   "keywords": [
     "capacitor",
