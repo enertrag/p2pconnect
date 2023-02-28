@@ -14,6 +14,8 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -76,6 +78,21 @@ public class P2pConnect extends Plugin {
     @PluginMethod
     public void isAvailable(PluginCall call) {
         JSObject ret = new JSObject();
+
+        GoogleApiAvailability googleApiAvailability = GoogleApiAvailability.getInstance();
+        int status = googleApiAvailability.isGooglePlayServicesAvailable(getActivity());
+        if(status != ConnectionResult.SUCCESS) {
+
+            if(googleApiAvailability.isUserResolvableError(status)) {
+                googleApiAvailability.getErrorDialog(getActivity(), status, 2404).show();
+            }
+
+            ret.put("available", false);
+            call.resolve(ret);
+
+            return;
+        }
+
         ret.put("available", true);
         call.resolve(ret);
     }
@@ -211,6 +228,8 @@ public class P2pConnect extends Plugin {
             }
 
             Log.d(TAG, "Calling startAdvertise with serviceId " + serviceId);
+            // FIXME create another callback and resolve/reject
+            //  call in .addOnSuccessListener/.addOnFailureListener
             Receiver.getInstance().startAdvertise(getContext(), serviceId, transferId -> {
 
                 // accept transfer

@@ -416,5 +416,6 @@ Accepts or rejects a transfer.
 | **`cancelled`**           | <code>'cancelled'</code>           | The sending process was cancelled.                         |
 | **`permissionDenied`**    | <code>'permissionDenied'</code>    | The user has not granted the requested permissions.        |
 | **`internalError`**       | <code>'internalError'</code>       | An internal error occured. Something went terribly wrong.  |
+| **`connectionFailed`**    | <code>'connectionFailed'</code>    | The connection between the peers could not be established. |
 
 </docgen-api>

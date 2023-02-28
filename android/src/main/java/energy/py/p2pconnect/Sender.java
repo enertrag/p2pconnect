@@ -47,7 +47,7 @@ public class Sender {
         void onPeerLost(Peer peer);
     }
 
-    private SenderState _state;
+    private SenderState _state = SenderState.NONE;
 
     private String _currentServiceId;
     private String _currentTransferId;
@@ -77,11 +77,11 @@ public class Sender {
             _progressCallback = new WeakReference<>(progressCallback);
         }
 
-        @Override public void updateProgress(String title, int progress) {
+        @Override public void updateProgress(String title, int progress, String info) {
 
             ProgressCallback callback = _progressCallback.get();
             if (callback != null) {
-                callback.updateProgress(title, progress);
+                callback.updateProgress(title, progress, info);
             }
         }
 
@@ -90,7 +90,7 @@ public class Sender {
             Log.w(TAG, "Call failed: " + error);
             _state = SenderState.NONE;
 
-            updateProgress(null, -1);
+            updateProgress(null, -1, null);
 
             Nearby.getConnectionsClient(_context).disconnectFromEndpoint(endpoint);
 
@@ -118,7 +118,7 @@ public class Sender {
                         if(message.equals("ver.accept")) {
 
                             _state = SenderState.WAITING_FOR_TRANSFER_ID;
-                            updateProgress(null, 50);
+                            updateProgress(null, 50, null);
                             sendMessage(_context, endpointId, "tid." + _currentTransferId);
 
                         } else { // ver.deny
@@ -133,7 +133,7 @@ public class Sender {
                         if(message.equals("tid.accept")) {
 
                             _state = SenderState.WAITING_FOR_COUNT;
-                            updateProgress(null, 75);
+                            updateProgress(null, 75, null);
                             sendMessage(_context, endpointId, "cnt." + _currentResources.size());
 
                         } else { // tid.deny
@@ -147,7 +147,7 @@ public class Sender {
 
                         if(message.equals("cnt.accept")) {
 
-                            updateProgress(null, 90);
+                            updateProgress(null, 90, null);
 
                             for (int i = 0; i < _currentResources.size(); i++) {
                                 String m = "id." + i + "." + _currentResources.get(i).getId();
@@ -170,7 +170,7 @@ public class Sender {
 
                             _state = SenderState.TRANSFERRING_RESOURCES;
 
-                            updateProgress(null, 100);
+                            updateProgress(null, 100, null);
                             try {
                                 sendResources(_context, endpointId, this);
                             } catch(IOException ex) {
@@ -230,7 +230,7 @@ public class Sender {
                     Log.i(TAG, "Transfer complete for payload " + _currentFilePayloadId);
 
                     _currentFilePayloadId = 0;
-                    updateProgress(null, 100);
+                    updateProgress(null, 100, null);
                     try {
                         sendNextResource(_context, endpointId, this);
                     } catch(IOException ex) {
@@ -246,7 +246,7 @@ public class Sender {
                     int progress = (int)(100.0 * update.getBytesTransferred() / (double)update.getTotalBytes());
                     Log.d(TAG, "PayloadTransferUpdate: progress = " + progress);
 
-                    updateProgress(null, progress);
+                    updateProgress(null, progress, null);
 
                     break;
 
@@ -265,7 +265,7 @@ public class Sender {
         _state = SenderState.NONE;
 
         Log.i(TAG, "Process completed");
-        callback.updateProgress(null, -1);
+        callback.updateProgress(null, -1, null);
 
         Nearby.getConnectionsClient(context).disconnectFromEndpoint(endpoint);
 
@@ -284,14 +284,15 @@ public class Sender {
             Log.i(TAG, "Nothing left to do for index " + _currentResourceIndex);
             Log.d(TAG, "Waiting for the receiver to commit");
 
-            callback.updateProgress("⏳", 0);
+            callback.updateProgress("⏳", 0, null);
             _state = SenderState.WAITING_FOR_RECEIVER;
 
             return;
         }
 
         // 📂 x/y
-        callback.updateProgress("\uD83D\uDCC2 " + (_currentResourceIndex + 1) + "/" + _currentResources.size(), 0);
+        String info = context.getResources().getString(R.string.info_title_send);
+        callback.updateProgress("\uD83D\uDCC2 " + (_currentResourceIndex + 1) + "/" + _currentResources.size(), 0, info);
 
         ResourceDescriptor resource = _currentResources.get(_currentResourceIndex);
 
@@ -453,8 +454,10 @@ public class Sender {
                             case ConnectionsStatusCodes.STATUS_OK:
                                 Log.i(TAG, "Connection result = ConnectionsStatusCodes.STATUS_OK, endoint '" + endpointId + "'");
 
+                                String info = context.getResources().getString(R.string.info_title_sync);
+
                                 _state = SenderState.WAITING_FOR_VERSION; // 🤝 🔗 📂
-                                progressCallback.updateProgress("\uD83E\uDD1D", 25);
+                                progressCallback.updateProgress("\uD83E\uDD1D", 25, info);
                                 sendMessage(context, endpointId, "ver." + P2pConnect.PROTOCOL_VERSION);
 
                                 break;
@@ -499,14 +502,18 @@ public class Sender {
                             // We successfully requested a connection. Now both sides
                             // must accept before the connection is established.
                             Log.i(TAG, "connection request successful - waiting for connection handshake...");
-                       // TODO     successCallback.onSuccess(peerId);
                         })
                 .addOnFailureListener(
                         (Exception e) -> {
                             // Nearby Connections failed to request the connection.
                             Log.e(TAG, "Nearby.getConnectionsClient().requestConnection() failed", e);
-                          // TODO  failureCallback.onFailure(e);
-                            // FIXME muss resolve call
+
+                            progressCallback.updateProgress(null, -1, null);
+
+                            JSObject result = new JSObject();
+                            result.put("success", false);
+                            result.put("error", "connectionFailed");
+                            _callResolver.getCall().resolve(result);
                         });
     }
 

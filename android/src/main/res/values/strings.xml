@@ -1,6 +1,9 @@
 <resources>
-    <string name="title_activity_send">SendActivity</string>
-    <string name="title_activity_receive">ReceiveActivity</string>
+    <string name="title_activity_send" translatable="false">SendActivity</string>
+    <string name="title_activity_receive" translatable="false">ReceiveActivity</string>
     <string name="progress_title">🔗</string>
     <string name="button_send">Send</string>
+    <string name="info_title_connect">Connecting... (This may take a while)</string>
+    <string name="info_title_sync">Synchronizing...</string>
+    <string name="info_title_send">Transferring...</string>
 </resources>

@@ -95,7 +95,9 @@ export enum SendError {
   /** The user has not granted the requested permissions. */
   permissionDenied = 'permissionDenied',
   /** An internal error occured. Something went terribly wrong. */
-  internalError = 'internalError'
+  internalError = 'internalError',
+  /** The connection between the peers could not be established. */
+  connectionFailed = 'connectionFailed'
 }
 
 /**

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="button_send">Senden</string>
+    <string name="progress_title">🔗</string>
+    <string name="info_title_connect">Verbinde... (Das kann eine Weile dauern)</string>
+    <string name="info_title_sync">Synchronisiere...</string>
+    <string name="info_title_send">Übertrage...</string>
+</resources>

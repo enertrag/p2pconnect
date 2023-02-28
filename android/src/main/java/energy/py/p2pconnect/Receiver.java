@@ -64,11 +64,11 @@ public class Receiver implements ProgressCallback {
     private WeakReference<ProgressCallback> _progressCallback;
 
     @Override
-    public void updateProgress(String title, int progress) {
+    public void updateProgress(String title, int progress, String info) {
 
         ProgressCallback callback = _progressCallback.get();
         if(callback != null) {
-            callback.updateProgress(title, progress);
+            callback.updateProgress(title, progress, info);
         }
 
     }
@@ -106,9 +106,14 @@ public class Receiver implements ProgressCallback {
 
         String message = "tid." + (accept ? "accept" : "deny");
 
-        updateProgress(null, 66);
+        if(accept) {
+            updateProgress(null, 66, null);
+            _state = ReceiverState.WAITING_FOR_COUNT;
+        } else {
+            updateProgress(null, -1, null);
+            _state = ReceiverState.NONE;
+        }
 
-        _state = ReceiverState.WAITING_FOR_COUNT;
         sendMessage(context, _currentTransferEndpoint, message);
 
         return true;
@@ -161,7 +166,7 @@ public class Receiver implements ProgressCallback {
                             Log.i(TAG, "Answering version message (" + message + ") with '"
                                     + versionAnswer + "'");
 
-                            updateProgress(null, 25);
+                            updateProgress(null, 25, null);
                             _state = ReceiverState.WAITING_FOR_TRANSFER_ID;
                             sendMessage(_context, endpointId, versionAnswer);
                         } else {
@@ -179,7 +184,7 @@ public class Receiver implements ProgressCallback {
                             Log.i(TAG, "Notifying client about transferId '"
                                     + _currentTransferId + "'");
 
-                            updateProgress(null, 50);
+                            updateProgress(null, 50, null);
                             _state = ReceiverState.WAITING_FOR_TRANSFER_ACCEPT;
                             _notifyCallback.notify(_currentTransferId);
 
@@ -201,7 +206,7 @@ public class Receiver implements ProgressCallback {
 
                             Log.i(TAG, "Expecting " + _numberOfResourcesToReceive + " resource(s)");
 
-                            updateProgress(null, 90);
+                            updateProgress(null, 90, null);
                             _state = ReceiverState.WAITING_FOR_ID;
                             sendMessage(_context, endpointId, "cnt.accept");
 
@@ -215,7 +220,7 @@ public class Receiver implements ProgressCallback {
 
                         if(message.equals("id.done")) {
 
-                            updateProgress(null, 100);
+                            updateProgress(null, 100, null);
                             _state = ReceiverState.RECEIVING;
                             sendMessage(_context, endpointId, "id.accept");
 
@@ -259,8 +264,9 @@ public class Receiver implements ProgressCallback {
                             + " found: " + _currentReceivingResource + ")");
                 }
 
+                String info = _context.getResources().getString(R.string.info_title_send);
                 updateProgress("\uD83D\uDCC2 " + (_currentReceivingResource + 1) +  "/"
-                        + _numberOfResourcesToReceive, 0);
+                        + _numberOfResourcesToReceive, 0, info);
 
                 _currentPayload = payload;
             }
@@ -321,7 +327,7 @@ public class Receiver implements ProgressCallback {
                                 / (double)update.getTotalBytes());
 
                         Log.d(TAG, "OnPayloadTransferUpdate: progress = " + progress);
-                        updateProgress(null, progress);
+                        updateProgress(null, progress, null);
 
                         break;
 
@@ -340,7 +346,7 @@ public class Receiver implements ProgressCallback {
                                 ));
 
                         }
-                        updateProgress("", 100);
+                        updateProgress("", 100, null);
 
                         if (_currentReceivingResource >= _numberOfResourcesToReceive - 1) {
 
@@ -370,7 +376,7 @@ public class Receiver implements ProgressCallback {
         Log.i(TAG, "Transfer finished");
 
         _state = ReceiverState.NONE;
-        updateProgress(null, -1);
+        updateProgress(null, -1, null);
 
         // Nearby.getConnectionsClient(context).disconnectFromEndpoint(endpoint);
 
@@ -430,8 +436,8 @@ public class Receiver implements ProgressCallback {
                                             Log.i(TAG, "connection result = ConnectionsStatusCodes.STATUS_OK from endpoint '" + endpointId + "'");
 
                                             // 🤝 🔗 📂
-
-                                            updateProgress("\uD83E\uDD1D", 0 );
+                                            String info = context.getResources().getString(R.string.info_title_sync);
+                                            updateProgress("\uD83E\uDD1D", 0, info );
                                             _state = ReceiverState.WAITING_FOR_VERSION;
 
                                             break;
