@@ -15,6 +15,7 @@
 		17ACEA91299E4B42004E3E31 /* TransferProgressModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17ACEA90299E4B42004E3E31 /* TransferProgressModel.swift */; };
 		17ACEA93299F8A66004E3E31 /* Transmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17ACEA92299F8A66004E3E31 /* Transmitter.swift */; };
 		17E71DE5299E15C4006704D9 /* TransferProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E71DE4299E15C4006704D9 /* TransferProgressView.swift */; };
+		17E91B8329AF3549006D188A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 17E91B8529AF3549006D188A /* Localizable.strings */; };
 		20C0B05DCFC8E3958A738AF2 /* Pods_PluginTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6753A823D3815DB436415E3 /* Pods_PluginTests.framework */; };
 		50ADFF92201F53D600D50D53 /* Plugin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 50ADFF88201F53D600D50D53 /* Plugin.framework */; };
 		50ADFF97201F53D600D50D53 /* P2pConnectPluginTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50ADFF96201F53D600D50D53 /* P2pConnectPluginTests.swift */; };
@@ -42,6 +43,9 @@
 		17ACEA90299E4B42004E3E31 /* TransferProgressModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferProgressModel.swift; sourceTree = "<group>"; };
 		17ACEA92299F8A66004E3E31 /* Transmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transmitter.swift; sourceTree = "<group>"; };
 		17E71DE4299E15C4006704D9 /* TransferProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferProgressView.swift; sourceTree = "<group>"; };
+		17E91B8429AF3549006D188A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		17E91B8629AF356F006D188A /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
+		17E91B8729AF3575006D188A /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		3B2A61DA5A1F2DD4F959604D /* Pods_Plugin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Plugin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		50ADFF88201F53D600D50D53 /* Plugin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Plugin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		50ADFF8B201F53D600D50D53 /* P2pConnectPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = P2pConnectPlugin.h; sourceTree = "<group>"; };
@@ -127,6 +131,7 @@
 				173674A2299CC42B0074484E /* Implementation */,
 				50E1A94720377CB70090CE1A /* P2pConnectPlugin.swift */,
 				50ADFF8B201F53D600D50D53 /* P2pConnectPlugin.h */,
+				17E91B8529AF3549006D188A /* Localizable.strings */,
 				50ADFFA72020EE4F00D50D53 /* P2pConnectPlugin.m */,
 				50ADFF8C201F53D600D50D53 /* Info.plist */,
 				174F24F026C68E7D00B8B3B7 /* Advertiser.swift */,
@@ -247,6 +252,8 @@
 			knownRegions = (
 				en,
 				Base,
+				de,
+				fr,
 			);
 			mainGroup = 50ADFF7E201F53D600D50D53;
 			productRefGroup = 50ADFF89201F53D600D50D53 /* Products */;
@@ -264,6 +271,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				17E91B8329AF3549006D188A /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -370,11 +378,25 @@
 		};
 /* End PBXTargetDependency section */
 
+/* Begin PBXVariantGroup section */
+		17E91B8529AF3549006D188A /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				17E91B8429AF3549006D188A /* en */,
+				17E91B8629AF356F006D188A /* de */,
+				17E91B8729AF3575006D188A /* fr */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
 		50ADFF9A201F53D600D50D53 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -441,6 +463,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";

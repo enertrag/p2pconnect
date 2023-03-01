@@ -1,0 +1,11 @@
+/* 
+  Localizable.strings
+  Plugin
+
+  Created by Philipp Anné on 01.03.23.
+  Copyright © 2023 ENERTRAG SE. All rights reserved.
+*/
+
+"message_connect" = "Connecting... (This may take a while)"
+"message_sync" = "Synchronizing..."
+"message_send" = "Transferring..."

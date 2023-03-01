@@ -129,7 +129,7 @@ class Receiver: NSObject {
         }
     }
     
-    func updateProgress(title: String? = nil, progress: Double) {
+    func updateProgress(title: String? = nil, progress: Double, message: String? = nil) {
         
         CAPLog.print("🐇  updateProgress \(title ?? "nil") -> \(progress)")
         
@@ -138,6 +138,10 @@ class Receiver: NSObject {
             if let title = title {
                 self.progressModel.title = title
             }
+            if let message = message {
+                self.progressModel.message = message
+            }
+            
             self.progressModel.progress = progress
         }
     }
@@ -197,7 +201,7 @@ class Receiver: NSObject {
 
         currentResourceNumber = Receiver.NOTHING_RECEIVED
         
-        updateProgress(title: "📂 0/\(numberOfResourcesToReceive)", progress:  0.0)
+        updateProgress(title: "📂 0/\(numberOfResourcesToReceive)", progress:  0.0, message: "Transferring..." /* String(localized: "message_send") */)
         sendString("cnt.accept")
     }
     
@@ -314,7 +318,7 @@ extension Receiver: MCSessionDelegate {
             }
                 
             createProgressView() {
-                self.updateProgress(title: "🤝", progress: 0.0)
+                self.updateProgress(title: "🤝", progress: 0.0, message: "Synchronizing..." /* String(localized: "message_sync") */)
                 self.acceptVersion()
             }
             

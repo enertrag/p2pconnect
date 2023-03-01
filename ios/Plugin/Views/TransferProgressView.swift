@@ -31,6 +31,9 @@ struct TransferProgressView: View {
                             .padding()
                         ProgressView(value: viewModel.progress)
                             .padding()
+                        Text(viewModel.message)
+                            .font(.footnote)
+                            .padding()
                     }
                     .background(Color(UIColor.systemBackground))
                     .frame(width: 320)

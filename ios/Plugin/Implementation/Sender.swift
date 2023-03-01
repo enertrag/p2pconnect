@@ -148,7 +148,7 @@ class Sender: NSObject {
         }
     }
     
-    func updateProgress(title: String? = nil, progress: Double) {
+    func updateProgress(title: String? = nil, progress: Double, message: String? = nil) {
         
         CAPLog.print("🐇  updateProgress \(title ?? "nil") -> \(progress)")
         
@@ -157,6 +157,10 @@ class Sender: NSObject {
             if let title = title {
                 self.progressModel.title = title
             }
+            if let message = message {
+                self.progressModel.message = message
+            }
+            
             self.progressModel.progress = progress
         }
     }
@@ -185,7 +189,7 @@ class Sender: NSObject {
     
     func sendVersion() {
 
-        updateProgress(title: "🤝", progress: 0.25)
+        updateProgress(title: "🤝", progress: 0.25, message: "Synchronizing..." /* String(localized: "message_sync") */)
         sendString("ver.1")
         
         state = .waitingForVersion
@@ -221,7 +225,7 @@ class Sender: NSObject {
             return
         }
         
-        updateProgress(title: "📂 \(currentResourceTransferring + 1)/\(resources!.count)", progress: 0.0)
+        updateProgress(title: "📂 \(currentResourceTransferring + 1)/\(resources!.count)", progress: 0.0, message: "Transferring..." /* String(localized: "message_send") */)
         
         let res = resources![currentResourceTransferring]
         
