@@ -6,6 +6,6 @@
   Copyright © 2023 ENERTRAG SE. All rights reserved.
 */
 
-"message_connect" = "Connecting... (This may take a while)"
-"message_sync" = "Synchronizing..."
-"message_send" = "Transferring..."
+"message_connect" = "Connecting... (This may take a while)";
+"message_sync" = "Synchronizing...";
+"message_send" = "Transferring...";

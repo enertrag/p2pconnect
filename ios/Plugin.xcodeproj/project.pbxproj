@@ -10,8 +10,6 @@
 		03FC29A292ACC40490383A1F /* Pods_Plugin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B2A61DA5A1F2DD4F959604D /* Pods_Plugin.framework */; };
 		173674A4299CC4390074484E /* Sender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173674A3299CC4390074484E /* Sender.swift */; };
 		173674A6299CC4470074484E /* Receiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173674A5299CC4470074484E /* Receiver.swift */; };
-		174F24F126C68E7D00B8B3B7 /* Advertiser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 174F24F026C68E7D00B8B3B7 /* Advertiser.swift */; };
-		174F24F326C69CB800B8B3B7 /* Browser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 174F24F226C69CB800B8B3B7 /* Browser.swift */; };
 		17ACEA91299E4B42004E3E31 /* TransferProgressModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17ACEA90299E4B42004E3E31 /* TransferProgressModel.swift */; };
 		17ACEA93299F8A66004E3E31 /* Transmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17ACEA92299F8A66004E3E31 /* Transmitter.swift */; };
 		17E71DE5299E15C4006704D9 /* TransferProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E71DE4299E15C4006704D9 /* TransferProgressView.swift */; };
@@ -38,8 +36,6 @@
 /* Begin PBXFileReference section */
 		173674A3299CC4390074484E /* Sender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sender.swift; sourceTree = "<group>"; };
 		173674A5299CC4470074484E /* Receiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Receiver.swift; sourceTree = "<group>"; };
-		174F24F026C68E7D00B8B3B7 /* Advertiser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Advertiser.swift; sourceTree = "<group>"; };
-		174F24F226C69CB800B8B3B7 /* Browser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Browser.swift; sourceTree = "<group>"; };
 		17ACEA90299E4B42004E3E31 /* TransferProgressModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferProgressModel.swift; sourceTree = "<group>"; };
 		17ACEA92299F8A66004E3E31 /* Transmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transmitter.swift; sourceTree = "<group>"; };
 		17E71DE4299E15C4006704D9 /* TransferProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferProgressView.swift; sourceTree = "<group>"; };
@@ -134,8 +130,6 @@
 				17E91B8529AF3549006D188A /* Localizable.strings */,
 				50ADFFA72020EE4F00D50D53 /* P2pConnectPlugin.m */,
 				50ADFF8C201F53D600D50D53 /* Info.plist */,
-				174F24F026C68E7D00B8B3B7 /* Advertiser.swift */,
-				174F24F226C69CB800B8B3B7 /* Browser.swift */,
 			);
 			path = Plugin;
 			sourceTree = "<group>";
@@ -351,11 +345,9 @@
 				17E71DE5299E15C4006704D9 /* TransferProgressView.swift in Sources */,
 				17ACEA91299E4B42004E3E31 /* TransferProgressModel.swift in Sources */,
 				173674A6299CC4470074484E /* Receiver.swift in Sources */,
-				174F24F326C69CB800B8B3B7 /* Browser.swift in Sources */,
 				50E1A94820377CB70090CE1A /* P2pConnectPlugin.swift in Sources */,
 				50ADFFA82020EE4F00D50D53 /* P2pConnectPlugin.m in Sources */,
 				17ACEA93299F8A66004E3E31 /* Transmitter.swift in Sources */,
-				174F24F126C68E7D00B8B3B7 /* Advertiser.swift in Sources */,
 				173674A4299CC4390074484E /* Sender.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -532,12 +524,13 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = Plugin/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks $(FRAMEWORK_SEARCH_PATHS)\n$(FRAMEWORK_SEARCH_PATHS)\n$(FRAMEWORK_SEARCH_PATHS)";
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.getcapacitor.Plugin;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -557,12 +550,13 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = Plugin/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks $(FRAMEWORK_SEARCH_PATHS)";
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.getcapacitor.Plugin;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
