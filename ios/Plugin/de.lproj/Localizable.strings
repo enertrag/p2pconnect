@@ -6,6 +6,6 @@
   Copyright © 2023 ENERTRAG SE. All rights reserved.
 */
 
-"message_connect" = "Verbinde..."
-"message_sync" = "Synchronisiere..."
-"message_send" = "Übertrage..."
+"message_connect" = "Verbinde...";
+"message_sync" = "Synchronisiere...";
+"message_send" = "Übertrage...";
