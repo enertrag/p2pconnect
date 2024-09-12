@@ -202,12 +202,12 @@ The methods of the peer-to-peer interface are described below.
 ### isAvailable()
 
 ```typescript
-isAvailable() => any
+isAvailable() => Promise<{ available: boolean; }>
 ```
 
 Indicates whether the Peer to Peer function is available on the device.
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise&lt;{ available: boolean; }&gt;</code>
 
 **Since:** 1.0.0
 
@@ -217,12 +217,10 @@ Indicates whether the Peer to Peer function is available on the device.
 ### removeAllListeners()
 
 ```typescript
-removeAllListeners() => any
+removeAllListeners() => Promise<void>
 ```
 
 Remove all native listeners for this plugin.
-
-**Returns:** <code>any</code>
 
 **Since:** 1.0.0
 
@@ -232,7 +230,7 @@ Remove all native listeners for this plugin.
 ### addListener(...)
 
 ```typescript
-addListener(eventName: 'acceptTransfer', listenerFunc: (request: AcceptTransferRequest) => void) => Promise<PluginListenerHandle> & PluginListenerHandle
+addListener(eventName: 'acceptTransfer', listenerFunc: (request: AcceptTransferRequest) => void) => Promise<PluginListenerHandle>
 ```
 
 The notification is triggered on the recipient's side when a new transfer 
@@ -243,7 +241,7 @@ is received that needs to be confirmed.
 | **`eventName`**    | <code>"acceptTransfer"</code>                                                                 |
 | **`listenerFunc`** | <code>(request: <a href="#accepttransferrequest">AcceptTransferRequest</a>) =&gt; void</code> |
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
 --------------------
 
@@ -251,7 +249,7 @@ is received that needs to be confirmed.
 ### addListener(...)
 
 ```typescript
-addListener(eventName: 'transferComplete', listenerFunc: (result: TransferResult) => void) => Promise<PluginListenerHandle> & PluginListenerHandle
+addListener(eventName: 'transferComplete', listenerFunc: (result: TransferResult) => void) => Promise<PluginListenerHandle>
 ```
 
 Notification is triggered on the recipient's side 
@@ -262,7 +260,7 @@ when a transfer is complete.
 | **`eventName`**    | <code>"transferComplete"</code>                                                |
 | **`listenerFunc`** | <code>(result: <a href="#transferresult">TransferResult</a>) =&gt; void</code> |
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
 --------------------
 
@@ -270,7 +268,7 @@ when a transfer is complete.
 ### send(...)
 
 ```typescript
-send(options: SendOptions) => any
+send(options: SendOptions) => Promise<{ success: boolean; error: SendError | null; }>
 ```
 
 Starts a transfer on the sender's side.
@@ -279,7 +277,7 @@ Starts a transfer on the sender's side.
 | ------------- | --------------------------------------------------- |
 | **`options`** | <code><a href="#sendoptions">SendOptions</a></code> |
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise&lt;{ success: boolean; error: <a href="#senderror">SendError</a> | null; }&gt;</code>
 
 --------------------
 
@@ -287,7 +285,7 @@ Starts a transfer on the sender's side.
 ### startReceive(...)
 
 ```typescript
-startReceive(options: ReceiveOptions) => any
+startReceive(options: ReceiveOptions) => Promise<{ success: boolean; }>
 ```
 
 Activates the reception of a transfer on the recipient's side.
@@ -296,7 +294,7 @@ Activates the reception of a transfer on the recipient's side.
 | ------------- | --------------------------------------------------------- |
 | **`options`** | <code><a href="#receiveoptions">ReceiveOptions</a></code> |
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise&lt;{ success: boolean; }&gt;</code>
 
 --------------------
 
@@ -304,12 +302,12 @@ Activates the reception of a transfer on the recipient's side.
 ### stopReceive()
 
 ```typescript
-stopReceive() => any
+stopReceive() => Promise<{ success: boolean; }>
 ```
 
 Cancels the reception on the receiver's side.
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise&lt;{ success: boolean; }&gt;</code>
 
 --------------------
 
@@ -317,7 +315,7 @@ Cancels the reception on the receiver's side.
 ### acceptTransfer(...)
 
 ```typescript
-acceptTransfer(options: AcceptTransferOptions) => any
+acceptTransfer(options: AcceptTransferOptions) => Promise<void>
 ```
 
 Must be called in response to the 'acceptTransfer' 
@@ -328,12 +326,17 @@ transfer should be accepted or rejected.
 | ------------- | ----------------------------------------------------------------------- |
 | **`options`** | <code><a href="#accepttransferoptions">AcceptTransferOptions</a></code> |
 
-**Returns:** <code>any</code>
-
 --------------------
 
 
 ### Interfaces
+
+
+#### PluginListenerHandle
+
+| Prop         | Type                                      |
+| ------------ | ----------------------------------------- |
+| **`remove`** | <code>() =&gt; Promise&lt;void&gt;</code> |
 
 
 #### AcceptTransferRequest
@@ -346,21 +349,14 @@ or decline acceptance of the transfer.
 | **`transferId`** | <code>string</code> | The ID of the transfer whose status is to be confirmed. |
 
 
-#### PluginListenerHandle
-
-| Prop         | Type                      |
-| ------------ | ------------------------- |
-| **`remove`** | <code>() =&gt; any</code> |
-
-
 #### TransferResult
 
 The result of a transmission process for the receiver.
 
-| Prop             | Type                | Description                            |
-| ---------------- | ------------------- | -------------------------------------- |
-| **`transferId`** | <code>string</code> | The ID for the transfer process.       |
-| **`resources`**  | <code>{}</code>     | The list of the transferred resources. |
+| Prop             | Type                              | Description                            |
+| ---------------- | --------------------------------- | -------------------------------------- |
+| **`transferId`** | <code>string</code>               | The ID for the transfer process.       |
+| **`resources`**  | <code>ResourceDescriptor[]</code> | The list of the transferred resources. |
 
 
 #### ResourceDescriptor
@@ -377,11 +373,11 @@ Describes a resource to be transferred.
 
 Defines the parameters of the sender to transfer files.
 
-| Prop             | Type                | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ---------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`serviceId`**  | <code>string</code> | The identifier for the P2P process. Only devices that use the same identifier can be found. To remain compatible with iOS devices, the identifier must meet the following criteria: &lt;ul&gt; &lt;li&gt;Must be 1–15 characters long&lt;/li&gt; &lt;li&gt;Can contain only ASCII lowercase letters, numbers, and hyphens&lt;/li&gt; &lt;li&gt;Must contain at least one ASCII letter&lt;/li&gt; &lt;li&gt;Must not begin or end with a hyphen&lt;/li&gt; &lt;li&gt;Must not contain hyphens adjacent to other hyphens.&lt;/li&gt; &lt;/ul&gt; |
-| **`transferId`** | <code>string</code> | The ID for the transfer process.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| **`resources`**  | <code>{}</code>     | The list of the resources to be transferred.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Prop             | Type                              | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ---------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`serviceId`**  | <code>string</code>               | The identifier for the P2P process. Only devices that use the same identifier can be found. To remain compatible with iOS devices, the identifier must meet the following criteria: &lt;ul&gt; &lt;li&gt;Must be 1–15 characters long&lt;/li&gt; &lt;li&gt;Can contain only ASCII lowercase letters, numbers, and hyphens&lt;/li&gt; &lt;li&gt;Must contain at least one ASCII letter&lt;/li&gt; &lt;li&gt;Must not begin or end with a hyphen&lt;/li&gt; &lt;li&gt;Must not contain hyphens adjacent to other hyphens.&lt;/li&gt; &lt;/ul&gt; |
+| **`transferId`** | <code>string</code>               | The ID for the transfer process.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| **`resources`**  | <code>ResourceDescriptor[]</code> | The list of the resources to be transferred.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 
 #### ReceiveOptions
