@@ -138,7 +138,7 @@ export interface P2pConnectPlugin {
   addListener(
     eventName: 'acceptTransfer',
     listenerFunc: (request: AcceptTransferRequest) => void
-  ): Promise<PluginListenerHandle> & PluginListenerHandle;
+  ): Promise<PluginListenerHandle>;
 
   /**
    * Notification is triggered on the recipient's side 
@@ -147,7 +147,7 @@ export interface P2pConnectPlugin {
   addListener(
     eventName: 'transferComplete',
     listenerFunc: (result: TransferResult) => void
-  ): Promise<PluginListenerHandle> & PluginListenerHandle;
+  ): Promise<PluginListenerHandle>;
 
   /** Starts a transfer on the sender's side. */
   send(options: SendOptions): Promise<{ success: boolean, error: SendError | null }>;
