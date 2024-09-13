@@ -20,6 +20,8 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: gradle
+    - name: Setup gradle
+      uses: gradle/actions/setup-gradle@v3
     - name: Setup Node.js
       uses: actions/setup-node@v1
       with:
@@ -27,4 +29,4 @@ jobs:
     - name: Install app dependencies
       run: npm install
     - name: Verify Plugin
-      run: npm run verify
+      run: npm run verify:android
