@@ -13,7 +13,11 @@
     "pretty": true,
     "sourceMap": true,
     "strict": true,
-    "target": "es2017"
+    "target": "es2017",
+    "types": []
   },
+  "exclude": [
+    "node_modules"
+  ],
   "files": ["src/index.ts"]
 }
