@@ -26,11 +26,5 @@ jobs:
         node-version: 18.x
     - name: Install app dependencies
       run: npm install
-    - name: Build Plugin
-      run: npm run build
-    - name: Grant execute permission for gradlew
-      working-directory: ./android
-      run: chmod +x gradlew
-    - name: Build with Gradle
-      working-directory: ./android
-      run: ./gradlew build
+    - name: Verify Plugin
+      run: npm run verify
