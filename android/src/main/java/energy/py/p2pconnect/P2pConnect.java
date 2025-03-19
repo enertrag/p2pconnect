@@ -35,7 +35,7 @@ import java.util.UUID;
                     strings = {
                             Manifest.permission.ACCESS_COARSE_LOCATION,
                             Manifest.permission.ACCESS_FINE_LOCATION,
-                            // Manifest.permission.NEARBY_WIFI_DEVICES
+                            Manifest.permission.NEARBY_WIFI_DEVICES
                     }
                 ),
                 @Permission(
@@ -49,13 +49,16 @@ import java.util.UUID;
                         alias = "bluetooth",
                         strings = {
                                 Manifest.permission.BLUETOOTH_ADMIN,
-                                Manifest.permission.BLUETOOTH
+                                Manifest.permission.BLUETOOTH,
+                                Manifest.permission.BLUETOOTH_SCAN,
+                                Manifest.permission.BLUETOOTH_ADVERTISE,
+                                Manifest.permission.BLUETOOTH_CONNECT
                         }
                 ),
                 @Permission(
                         alias = "file",
                         strings = {
-                                Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.READ_MEDIA_IMAGES,
                         }
                 )
 })
