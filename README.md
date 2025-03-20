@@ -183,8 +183,8 @@ sequenceDiagram
 
 * [`isAvailable()`](#isavailable)
 * [`removeAllListeners()`](#removealllisteners)
-* [`addListener(...)`](#addlistener)
-* [`addListener(...)`](#addlistener)
+* [`addListener('acceptTransfer', ...)`](#addlisteneraccepttransfer-)
+* [`addListener('transferComplete', ...)`](#addlistenertransfercomplete-)
 * [`send(...)`](#send)
 * [`startReceive(...)`](#startreceive)
 * [`stopReceive()`](#stopreceive)
@@ -227,7 +227,7 @@ Remove all native listeners for this plugin.
 --------------------
 
 
-### addListener(...)
+### addListener('acceptTransfer', ...)
 
 ```typescript
 addListener(eventName: 'acceptTransfer', listenerFunc: (request: AcceptTransferRequest) => void) => Promise<PluginListenerHandle>
@@ -238,7 +238,7 @@ is received that needs to be confirmed.
 
 | Param              | Type                                                                                          |
 | ------------------ | --------------------------------------------------------------------------------------------- |
-| **`eventName`**    | <code>"acceptTransfer"</code>                                                                 |
+| **`eventName`**    | <code>'acceptTransfer'</code>                                                                 |
 | **`listenerFunc`** | <code>(request: <a href="#accepttransferrequest">AcceptTransferRequest</a>) =&gt; void</code> |
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
@@ -246,7 +246,7 @@ is received that needs to be confirmed.
 --------------------
 
 
-### addListener(...)
+### addListener('transferComplete', ...)
 
 ```typescript
 addListener(eventName: 'transferComplete', listenerFunc: (result: TransferResult) => void) => Promise<PluginListenerHandle>
@@ -257,7 +257,7 @@ when a transfer is complete.
 
 | Param              | Type                                                                           |
 | ------------------ | ------------------------------------------------------------------------------ |
-| **`eventName`**    | <code>"transferComplete"</code>                                                |
+| **`eventName`**    | <code>'transferComplete'</code>                                                |
 | **`listenerFunc`** | <code>(result: <a href="#transferresult">TransferResult</a>) =&gt; void</code> |
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
