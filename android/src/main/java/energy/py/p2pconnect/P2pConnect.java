@@ -54,12 +54,6 @@ import java.util.UUID;
                                 Manifest.permission.BLUETOOTH_ADVERTISE,
                                 Manifest.permission.BLUETOOTH_CONNECT
                         }
-                ),
-                @Permission(
-                        alias = "file",
-                        strings = {
-                            Manifest.permission.READ_MEDIA_IMAGES,
-                        }
                 )
 })
 public class P2pConnect extends Plugin {
@@ -303,8 +297,7 @@ public class P2pConnect extends Plugin {
         return
             getPermissionState("location") == PermissionState.GRANTED &&
             getPermissionState("wifi") == PermissionState.GRANTED &&
-            getPermissionState("bluetooth") == PermissionState.GRANTED &&
-            getPermissionState("file") == PermissionState.GRANTED;
+            getPermissionState("bluetooth") == PermissionState.GRANTED;
     }
 
 }
