@@ -1,6 +1,6 @@
 {
   "name": "@enertrag/p2pconnect",
-  "version": "7.2.0",
+  "version": "8.5.0",
   "type": "module",
   "description": "Capacitor Peer to Peer connectivity plugin",
   "main": "dist/plugin.cjs.js",
