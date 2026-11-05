@@ -45,6 +45,7 @@ class Sender: NSObject {
     var currentResourceTransferring = NOT_STARTED
     
     var session: MCSession?
+    var browser: MCNearbyServiceBrowser?
     
     var progressModel = TransferProgressModel("")
     var progressView: UIViewController?
@@ -66,18 +67,11 @@ class Sender: NSObject {
         
         let peerId = MCPeerID(displayName: UIDevice.current.name)
         session = MCSession(peer: peerId)
-        
         session!.delegate = self
         
-        let view = MCBrowserViewController(serviceType: serviceId, session: session!)
-        view.delegate = self
-        view.minimumNumberOfPeers = 2
-        view.maximumNumberOfPeers = 2
-        
-        DispatchQueue.main.async {
-            
-            self.plugin.bridge?.viewController?.present(view, animated: true)
-        }
+        browser = MCNearbyServiceBrowser(peer: peerId, serviceType: serviceId)
+        browser!.delegate = self
+        browser!.startBrowsingForPeers()
     }
     
     func cleanUp() {
@@ -140,10 +134,18 @@ class Sender: NSObject {
             self.progressView!.modalTransitionStyle = UIModalTransitionStyle.crossDissolve //crossDissolve
             self.progressView!.view?.backgroundColor = .clear
             
-            self.plugin.bridge?.viewController?.present(self.progressView!, animated: true) {
-                CAPLog.print("🐇  Created progress view")
-                
-                onCompletion()
+            if let plugin = self.plugin as? P2pConnectPlugin {
+                plugin.present(self.progressView!, animated: true) {
+                    CAPLog.print("🐇  Created progress view")
+                    
+                    onCompletion()
+                }
+            } else {
+                self.plugin.bridge?.viewController?.present(self.progressView!, animated: true) {
+                    CAPLog.print("🐇  Created progress view")
+                    
+                    onCompletion()
+                }
             }
         }
     }
@@ -251,28 +253,33 @@ class Sender: NSObject {
 
 
 
-extension Sender: MCBrowserViewControllerDelegate {
+extension Sender: MCNearbyServiceBrowserDelegate {
     
-    
-    func browserViewControllerDidFinish(_ browserViewController: MCBrowserViewController) {
-
-        CAPLog.print("finished browser")
+    func browser(_ browser: MCNearbyServiceBrowser,
+                  foundPeer peerID: MCPeerID,
+                  withDiscoveryInfo info: [String: String]?) {
         
-        browserViewController.dismiss(animated: true)
-
-        createProgressView() {
-            
-            self.sendVersion()
+        CAPLog.print("🐇  found peer \(peerID.displayName)")
+        
+        if self.state == .browsing {
+            self.browser?.invitePeer(peerID, to: self.session!, withContext: nil, timeout: 30)
+            createProgressView() {
+                self.sendVersion()
+            }
         }
     }
     
-    func browserViewControllerWasCancelled(_ browserViewController: MCBrowserViewController) {
+    func browser(_ browser: MCNearbyServiceBrowser,
+                  lostPeer peerID: MCPeerID) {
         
-        CAPLog.print("cancelled browser")
+        CAPLog.print("🐇  lost peer \(peerID.displayName)")
+    }
+    
+    func browser(_ browser: MCNearbyServiceBrowser,
+                  didNotStartBrowsingForPeers error: Error) {
         
-        browserViewController.dismiss(animated: true)
-        
-        failCall(withError: "cancelled")
+        CAPLog.print("🐇  browser failed: \(error)")
+        failCall(withError: "browserFailed")
     }
 }
 

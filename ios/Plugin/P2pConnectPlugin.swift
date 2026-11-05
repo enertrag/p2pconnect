@@ -1,6 +1,7 @@
 // Copyright © 2021 ENERTRAG AG
 
 import Foundation
+import UIKit
 import Capacitor
 import MultipeerConnectivity
 
@@ -28,6 +29,31 @@ public class P2pConnectPlugin: CAPPlugin {
         
         receiver = Receiver(self)
         sender = Sender(self)
+    }
+    
+    func activePresentationController() -> UIViewController? {
+        
+        guard let base = self.bridge?.viewController else {
+            return nil
+        }
+        
+        var top = base
+        while let presented = top.presentedViewController {
+            top = presented
+        }
+        
+        return top
+    }
+    
+    func present(_ controller: UIViewController,
+                 animated: Bool = true,
+                 completion: (() -> Void)? = nil) {
+        
+        guard let presenter = self.activePresentationController() else {
+            return
+        }
+        
+        presenter.present(controller, animated: animated, completion: completion)
     }
 
     deinit {

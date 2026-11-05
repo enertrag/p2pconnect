@@ -32,7 +32,7 @@ class Receiver: NSObject {
     
     var plugin: CAPPlugin
     
-    var advertiserAssistant: MCAdvertiserAssistant?
+    var advertiser: MCNearbyServiceAdvertiser?
     var session: MCSession?
     
     var progressModel = TransferProgressModel("")
@@ -61,10 +61,11 @@ class Receiver: NSObject {
         session = MCSession(peer: peerId)
         session!.delegate = self
         
-        advertiserAssistant = MCAdvertiserAssistant(serviceType: serviceId, discoveryInfo: nil, session: session!)
-        advertiserAssistant!.delegate = self
-
-        advertiserAssistant!.start()
+        advertiser = MCNearbyServiceAdvertiser(peer: peerId,
+                                                discoveryInfo: nil,
+                                                serviceType: serviceId)
+        advertiser!.delegate = self
+        advertiser!.startAdvertisingPeer()
         
         state = .advertising
         
@@ -121,10 +122,18 @@ class Receiver: NSObject {
             self.progressView!.modalTransitionStyle = UIModalTransitionStyle.crossDissolve //crossDissolve
             self.progressView!.view?.backgroundColor = .clear
             
-            self.plugin.bridge?.viewController?.present(self.progressView!, animated: true) {
-                CAPLog.print("🐇  Created progress view")
-                
-                onCompletion()
+            if let plugin = self.plugin as? P2pConnectPlugin {
+                plugin.present(self.progressView!, animated: true) {
+                    CAPLog.print("🐇  Created progress view")
+                    
+                    onCompletion()
+                }
+            } else {
+                self.plugin.bridge?.viewController?.present(self.progressView!, animated: true) {
+                    CAPLog.print("🐇  Created progress view")
+                    
+                    onCompletion()
+                }
             }
         }
     }
@@ -207,14 +216,14 @@ class Receiver: NSObject {
     
     func dismissAdvertiser() {
         
-        guard advertiserAssistant != nil else {
+        guard advertiser != nil else {
             return
         }
         
         CAPLog.print("🐇  dismissing advertiser")
         
-        advertiserAssistant?.stop()
-        advertiserAssistant = nil
+        advertiser?.stopAdvertisingPeer()
+        advertiser = nil
     }
     
     @objc func cancelAcceptTransfer(_ transferId: String) {
@@ -271,16 +280,22 @@ class Receiver: NSObject {
     
 }
 
-extension Receiver: MCAdvertiserAssistantDelegate {
+extension Receiver: MCNearbyServiceAdvertiserDelegate {
     
-    func advertiserAssistantDidDismissInvitation(_ advertiserAssistant: MCAdvertiserAssistant) {
-        CAPLog.print("did dismiss invitation")
+    func advertiser(_ advertiser: MCNearbyServiceAdvertiser,
+                    didReceiveInvitationFromPeer peerID: MCPeerID,
+                    withContext context: Data?,
+                    invitationHandler: @escaping (Bool, MCSession?) -> Void) {
+        
+        CAPLog.print("🐇  accepting invitation from \(peerID.displayName)")
+        invitationHandler(true, session)
     }
     
-    func advertiserAssistantWillPresentInvitation(_ advertiserAssistant: MCAdvertiserAssistant) {
-        CAPLog.print("will present invitation")
+    func advertiser(_ advertiser: MCNearbyServiceAdvertiser,
+                    didNotStartAdvertisingPeer error: Error) {
+        
+        CAPLog.print("🐇  advertiser failed to start: \(error)")
     }
-    
 }
 
 extension Receiver: MCSessionDelegate {
